@@ -12,3 +12,4 @@ class BiddingEnv():
     def round(self, pulled_arm):
         return np.random.normal(self.means[pulled_arm],self.sigmas[pulled_arm])
     
+    
