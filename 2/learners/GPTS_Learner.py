@@ -13,7 +13,7 @@ class GPTS_Learner:
         self.collected_rewards = np.array([])
         alpha = 10.0
         kernel = C(1.0, (1e-3, 1e3)) * RBF(1.0, (1e-3, 1e3))
-        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha**2,
+        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha ** 2,
                                            normalize_y=True, n_restarts_optimizer=9)
 
     def update_observations(self, arm_idx, reward):
@@ -21,7 +21,7 @@ class GPTS_Learner:
         Updates what the Gaussian Process has observed so far in two lists,
         collected_rewards and pulled arms
         """
-        self.collected_rewards = np.append(self.collected_rewards,reward)
+        self.collected_rewards = np.append(self.collected_rewards, reward)
         self.pulled_arms.append(self.arms[arm_idx])
 
     def update_model(self):
@@ -34,7 +34,6 @@ class GPTS_Learner:
         self.means, self.sigmas = self.gp.predict(
             np.atleast_2d(self.arms).T, return_std=True)
         self.sigmas = np.maximum(self.sigmas, 1e-2)
-        
 
     def update(self, pulled_arm, reward):
         """
@@ -51,7 +50,7 @@ class GPTS_Learner:
         length of means and sigmas
         """
         sampled_value = np.random.normal(self.means[arm_idx], self.sigmas[arm_idx])
-        sampled_value = np.maximum(0 , sampled_value) # to avoid negative values
+        sampled_value = np.maximum(0, sampled_value)  # to avoid negative values
         return sampled_value
 
     def find_arm(self, arm):
@@ -64,4 +63,3 @@ class GPTS_Learner:
             if self.arms[idx] == arm:
                 return idx
         return False
-        
