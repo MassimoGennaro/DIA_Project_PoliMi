@@ -5,7 +5,7 @@ from environment.Subcampaign import *
 from knapsack.knapsack import Knapsack
 
 n_arms = 5
-min_budget = 1
+
 max_budget = 5
 
 labels = ['FaY', 'FaA', 'NFaY']
@@ -16,7 +16,7 @@ num_subcampaigns = len(subcampaigns)
 T = 60
 
 
-budgets = np.linspace(min_budget, max_budget, n_arms)
+budgets = np.linspace(0, max_budget, n_arms)
 
 n_experiments = 1
 gpts_rewards_per_experiment = []
@@ -57,8 +57,7 @@ for e in range(n_experiments):
         # For each subcampaing and budget related to it, use the budget to sample from the environment (click function)
         # Then use the sample obtained to update the current Subcampaing_GP
         for (subcampaign_id, budget) in super_arm:
-            reward = env.get_subcampaign_by_idx(
-                subcampaign_id).aggr_sample(budget)
+            reward = env.get_subcampaign_by_idx(subcampaign_id).aggr_sample(budget)
             #print(reward)
             #total_reward = 0
             #total_reward += sum(reward)
