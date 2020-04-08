@@ -72,6 +72,11 @@ def knapsack_optimizer(table):
     return list(enumerate(assignments))
 
 
+
+
+
+############# OLD ####################
+
 class Knapsack2:
     def __init__(self, budget, values, arms=None):
         self.subcampaigns_number = len(values) + 1

@@ -3,6 +3,7 @@ import numpy as np
 from learners.Subcampaign_Learner import *
 from environment.Subcampaign import *
 from knapsack.knapsack import *
+import matplotlib.pyplot as plt
 
 max_budget = 5
 n_arms = max_budget+1
@@ -16,7 +17,9 @@ num_subcampaigns = len(subcampaigns)
 
 T = 60
 
-n_experiments = 1
+n_experiments = 5
+
+# Contains the rewards for each experiment (each element is a list of T rewards)
 gpts_rewards_per_experiment = []
 
 for e in range(n_experiments):
@@ -24,16 +27,8 @@ for e in range(n_experiments):
     env = BudgetEnvironment(subcampaigns)
     # Create a list of Subcampaign_GP
     s_learners = [Subcampaign_Learner(budgets, l) for l in labels]
-    
-
-    ## TESTING ##
-    reward = env.get_subcampaign_by_idx(1).aggr_sample(1)
-    #print(reward)
-    print("Values of means and sigmas before the update: ", s_learners[0].means, s_learners[0].sigmas)
-    s_learners[0].update(1, reward)
-    print("Values of means and sigmas after the update:", s_learners[0].means, s_learners[0].sigmas)
-    #############
-
+    # List to collect the reward at each time step
+    rewards = []
 
     for t in range(T):
         # Sample from the Subcampaign_GP to get clicks estimations for each arm
@@ -41,22 +36,34 @@ for e in range(n_experiments):
         estimations = []
         for s in s_learners:
             estimate = [s.sample_from_GP(a) for a in budgets]
+            # in this way the estimation of the budget equal to zero is always zero
+            estimate[0] = 0
             # print(estimate)
             if(sum(estimate) == 0):
                 estimate = [i * 1e-3 for i in range(n_arms)]
             estimations.append(estimate)
         # Knapsack return the super_arm as [(subcampaign, best_budget to assign), ..]
-        super_arm = knapsack_optimizer(estimations) # Knapsack(max_budget, estimations).optimize()
-        # RISOLTO?
-        # Problema, knapsack ritorna valori di budget che non corrispondono a quelli interi ->
-        # -> Viene poi generato un errore durante l'update
-        print(super_arm)
+        super_arm = knapsack_optimizer(estimations)
+        
+        #print(super_arm)
 
         # For each subcampaign and budget related to it, use the budget to sample from the environment (click function)
         # Then use the sample obtained to update the current Subcampaing_GP
+        super_arm_reward = 0
         for (subcampaign_id, budget_arm) in super_arm:
-            reward = env.get_subcampaign_by_idx(subcampaign_id).aggr_sample(budget_arm)
-            #print(reward)
-            #total_reward = 0
-            #total_reward += sum(reward)
+            reward = env.get_subcampaign_by_idx(
+                subcampaign_id).aggr_sample(budget_arm)
+            # print(reward)
+            super_arm_reward += reward # sum each arm reward in the reward of the super arm
             s_learners[subcampaign_id].update(budget_arm, reward)
+        rewards.append(super_arm_reward) # this list contains the total reward for each time step
+        
+    gpts_rewards_per_experiment.append(rewards)
+    # print(gpts_rewards_per_experiment)
+    # print(e+1)
+    
+plt.figure()
+plt.ylabel("Reward")
+plt.xlabel("t")
+plt.plot(np.mean(gpts_rewards_per_experiment, axis = 0))
+plt.show()

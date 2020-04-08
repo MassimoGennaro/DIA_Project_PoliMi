@@ -10,3 +10,6 @@ class Subcampaign():
 
     def disaggr_sample(self, budget, phase):
         return sample_disaggregate(budget, self.label, phase)
+
+    def real_function_aggr(self, budget):
+        return aggregate_function(budget, self.label)
