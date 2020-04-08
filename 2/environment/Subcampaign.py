@@ -6,7 +6,7 @@ class Subcampaign():
         self.label = label
 
     def aggr_sample(self, budget):
-        sample_aggregate(budget, self.label)
+        return sample_aggregate(budget, self.label)
 
     def disaggr_sample(self, budget, phase):
-        sample_disaggregate(budget, self.label, phase)
+        return sample_disaggregate(budget, self.label, phase)

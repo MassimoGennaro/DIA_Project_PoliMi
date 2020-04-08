@@ -6,3 +6,9 @@ class Subcampaign_Learner(GPTS_Learner):
         super().__init__(arms)
         self.label = label
 
+    def sample_from_GP(self, arm):
+        """
+        Sample from the GP with the given value of budget
+        """
+        arm_idx = self.find_arm(arm)
+        return self.pull_arm(arm_idx)

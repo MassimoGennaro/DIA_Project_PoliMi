@@ -1,6 +1,6 @@
 from environment.BudgetEnvironment import *
 import numpy as np
-from learners.Subcampaign_Learner import * 
+from learners.Subcampaign_Learner import *
 from environment.Subcampaign import *
 from knapsack.knapsack import Knapsack
 
@@ -8,43 +8,58 @@ n_arms = 5
 min_budget = 1
 max_budget = 5
 
-labels = ['FaY','FaA','NFaY']
+labels = ['FaY', 'FaA', 'NFaY']
+# Create a list of Subcampaign
 subcampaigns = [Subcampaign(l) for l in labels]
 num_subcampaigns = len(subcampaigns)
 
 T = 60
-gpts_rewards_per_experiment = []
+
 
 budgets = np.linspace(min_budget, max_budget, n_arms)
 
 n_experiments = 1
 gpts_rewards_per_experiment = []
 
-
-
 for e in range(n_experiments):
-
+    # Create the BudgetEnvironment usint the list of sucampaigns
     env = BudgetEnvironment(subcampaigns)
-    s_learners = [Subcampaign_Learner(budgets,l) for l in labels]
+    # Create a list of Subcampaign_GP
+    s_learners = [Subcampaign_Learner(budgets, l) for l in labels]
+
+    
+
+    ## TESTING ##
+    reward = env.get_subcampaign_by_idx(1).aggr_sample(1)
+    #print(reward)
+    print("Values of means and sigmas before the update: ",s_learners[0].means, s_learners[0].sigmas)
+    s_learners[0].update(1, reward)
+    print("Values of means and sigmas after the update:",s_learners[0].means, s_learners[0].sigmas)
+    #############
+    
     
     for t in range(T):
-        
+        # Sample from the Subcampaign_GP to get clicks estimations for each arm
+        # and build the table to pass to Knapsack
         estimations = []
         for s in s_learners:
-            estimate = [s.pull_arms()]
-            ##print(estimate)
+            estimate = [s.sample_from_GP(a) for a in budgets]
+            # print(estimate)
+            if(sum(estimate) == 0):
+                estimate = [i * 1e-3 for i in range(n_arms)]
             estimations.append(estimate)
-            
+        # Knapsack return the super_arm as [(subcampaing, best_budget to assign), ..]
         super_arm = Knapsack(max_budget, estimations).optimize()
-        
-        total_reward = 0
-        
-        # TO DO: Trovare un modo corretto per indicizzare le subcampaign 
-        # (modificare l'attuale label)
-        
-        for (subcampaign_id, budget) in super_arm:
-            
-            reward = env.get_subcampaign(subcampaign_id).aggr_sample(budget)
-            total_reward += sum(reward)
+        # Problema, knapasack ritorna valori di budget che non corrispondono a quelli interi -> 
+        # -> Viene poi generato un errore durante l'update
+        print(super_arm)
 
+        # For each subcampaing and budget related to it, use the budget to sample from the environment (click function)
+        # Then use the sample obtained to update the current Subcampaing_GP
+        for (subcampaign_id, budget) in super_arm:
+            reward = env.get_subcampaign_by_idx(
+                subcampaign_id).aggr_sample(budget)
+            #print(reward)
+            #total_reward = 0
+            #total_reward += sum(reward)
             s_learners[subcampaign_id].update(budget, reward)

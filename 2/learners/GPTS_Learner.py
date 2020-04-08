@@ -43,13 +43,25 @@ class GPTS_Learner:
         self.update_observations(pulled_arm, reward)
         self.update_model()
 
-    def pull_arms(self):
+    def pull_arm(self, arm_idx):
         """
         Returns the predictions of the arms computing a 
         normal distribution for each of them using the currently means and sigmas.
         Note that it return one or more values as sample_values, depending on the
         length of means and sigmas
         """
-        sampled_values = np.random.normal(self.means, self.sigmas)
-        sampled_values = np.maximum(0 , sampled_values) # to avoid negative values
-        return sampled_values
+        sampled_value = np.random.normal(self.means[arm_idx], self.sigmas[arm_idx])
+        sampled_value = np.maximum(0 , sampled_value) # to avoid negative values
+        return sampled_value
+
+    def find_arm(self, arm):
+        """
+        Return the index of the given arm contained in self.arms if exixsts,
+        False otherwise
+        
+        """
+        for idx in range(self.n_arms):
+            if self.arms[idx] == arm:
+                return idx
+        return False
+        
