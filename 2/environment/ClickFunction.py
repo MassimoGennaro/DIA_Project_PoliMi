@@ -27,7 +27,8 @@ def aggregate_function(x, user):
 
 
 def sample_aggregate(x, user):
-    return aggregate_function(x, user) + np.random.normal(0, 2)
+    return (5*(sample_disaggregate(x, user, 'M')+sample_disaggregate(x, user, 'E'))+2*sample_disaggregate(x, user, 'W'))/7
+    #return aggregate_function(x, user) + np.random.normal(0, 2)
 
 
 def sample_disaggregate(x, user, phase):

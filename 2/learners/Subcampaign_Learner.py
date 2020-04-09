@@ -5,6 +5,7 @@ class Subcampaign_Learner(GPTS_Learner):
     def __init__(self, arms, label):
         super().__init__(arms)
         self.label = label
+        
 
     def sample_from_GP(self, arm):
         """
