@@ -13,3 +13,6 @@ class Subcampaign():
 
     def real_function_aggr(self, budget):
         return aggregate_function(budget, self.label)
+
+    def real_function_disaggr(self, budget, phase):
+        return disaggregate_function(budget, self.label, phase)

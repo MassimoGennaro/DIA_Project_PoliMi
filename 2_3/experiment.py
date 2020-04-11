@@ -15,13 +15,8 @@ labels = ['FaY', 'FaA', 'NFaY']
 subcampaigns = [Subcampaign(l) for l in labels]
 num_subcampaigns = len(subcampaigns)
 
-# Phases
+
 T = 56
-phase_1_ts = [t for t in range(T-16) if (t % 8) < 4]
-phase_2_ts = [t for t in range(T-16) if (t % 8) >= 4]
-phase_3_ts = [t for t in range(T-16, T)]
-
-
 n_experiments = 10
 
 
@@ -89,12 +84,18 @@ for e in range(n_experiments):
     print(e+1)
 
 plt.figure()
-plt.ylabel("Reward - Regret")
+plt.ylabel("Number of Clicks")
 plt.xlabel("t")
 mean_exp = np.mean(gpts_rewards_per_experiment, axis=0)
 opt = [opt_rewards_per_experiment for t in range(T)]
 regret = opt-mean_exp
-plt.plot(regret, 'r')
-plt.plot(mean_exp, 'g')
-plt.plot(opt, 'b')
+# plt.plot(np.cumsum(regret), 'r' , label='Cumulative Regret')
+# plt.plot(np.cumsum(mean_exp), 'b',label='Cumulative Expected Rewards')
+# plt.plot(np.cumsum(opt), 'g',label='Cumulative Optimal Reward')
+
+plt.plot(regret, 'r' , label='Regret')
+plt.plot(mean_exp, 'b',label='Expected Rewards')
+plt.plot(opt, 'g',label='Optimal Reward')
+
+plt.legend(loc="upper left")
 plt.show()
