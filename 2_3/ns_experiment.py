@@ -5,22 +5,33 @@ from knapsack.knapsack import *
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+# Budget settings
 max_budget = 5.0
+
 n_arms = int(max_budget + 1)
 budgets = np.linspace(0.0, max_budget, n_arms)
-sigma = 2.0
 
+
+# Phase settings
+phase_labels = ["Morning", "Evening", "Weekend"]
+phase_weights = [5/14, 5/14, 4/14]  # the sum must be equal to 1
+sample_factor = 4       # number of samples for each sub-phase (here, semi-day)
+time_factor = 1         # number of times the complete-phase (here, week) should be repeated
+
+phase_list = (([phase_labels.index("Morning")]*sample_factor + [phase_labels.index("Evening")]*sample_factor)*5 + \
+             [phase_labels.index("Weekend")]*4*sample_factor)*time_factor # list of phase indexes
+T = len(phase_list)     # Time Horizon
+
+
+# Class settings
 feature_labels = ["Young-Familiar", "Adult-Familiar", "Young-NotFamiliar"]
 
-# Phases
-phase_labels = ["Morning", "Evening", "Weekend"]
-phase_dict = ([phase_labels.index("Morning")]*4 + [phase_labels.index("Evening")]*4)*5 + [phase_labels.index("Weekend")]*16
-phase_weights = [5/14, 5/14, 4/14]
 
+# Experiment settings
+n_experiments = 2   # number of experiments
+sigma = 2.0         # sampling variance
 
-T = 56
-
-n_experiments = 2
 
 ########################
 # Clairvoyant Solution #
@@ -45,7 +56,7 @@ for phase in range(len(phase_labels)):
 
 opt_rewards_per_experiment = []
 for t in range(T):
-    opt_rewards_per_experiment.append(optimal_super_arm_reward_phase[phase_dict[t]])
+    opt_rewards_per_experiment.append(optimal_super_arm_reward_phase[phase_list[t]])
 
 #########################
 # Experimental Solution #
@@ -103,7 +114,7 @@ for e in range(n_experiments):
         # sample the number of clicks from the environment
         # and update the GP-learners in the pulled arms
         for (subc_id, pulled_arm) in enumerate(super_arm):
-            arm_reward = env.subcampaigns[subc_id].round(pulled_arm, phase=phase_dict[t])
+            arm_reward = env.subcampaigns[subc_id].round(pulled_arm, phase=phase_list[t])
             super_arm_reward += arm_reward
             SW_s_learners[subc_id].update(pulled_arm, arm_reward, t)
 
@@ -134,7 +145,7 @@ for e in range(n_experiments):
         # sample the number of clicks from the environment
         # and update the GP-learners in the pulled arms
         for (subc_id, pulled_arm) in enumerate(super_arm):
-            arm_reward = env.subcampaigns[subc_id].round(pulled_arm, phase=phase_dict[t])
+            arm_reward = env.subcampaigns[subc_id].round(pulled_arm, phase=phase_list[t])
             super_arm_reward += arm_reward
             subc_learners[subc_id].update(pulled_arm, arm_reward)
 

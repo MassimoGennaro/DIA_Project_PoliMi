@@ -5,18 +5,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+# Budget settings
 max_budget = 5.0
+
 n_arms = int(max_budget + 1)
 budgets = np.linspace(0.0, max_budget, n_arms)
-sigma = 10.0
 
+
+# Phase settings
 phase_labels = ["Morning", "Evening", "Weekend"]
-phase_weights = [5/14, 5/14, 2/7]
+phase_weights = [5/14, 5/14, 4/14]  # the sum must be equal to 1
+T = 20  # Time Horizon
+
+
+# Class settings
 feature_labels = ["Young-Familiar", "Adult-Familiar", "Young-NotFamiliar"]
 
-T = 20
-n_experiments = 3
 
+# Experiment settings
+n_experiments = 2   # number of experiments
+sigma = 2.0         # sampling variance
 
 
 ########################
