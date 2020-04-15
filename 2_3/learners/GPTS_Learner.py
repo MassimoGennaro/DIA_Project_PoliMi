@@ -5,24 +5,30 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
 class GPTS_Learner:
     def __init__(self, arms):
-        self.n_arms = len(arms)
         self.arms = arms
+        self.n_arms = len(arms)
+
+        # self.t = 0
+        # self.rewards_per_arm = [[] for i in range(self.n_arms)]
+        self.collected_rewards = np.array([])
+        self.pulled_arms = []
+
         self.means = np.zeros(self.n_arms)
         self.sigmas = np.ones(self.n_arms) * 10
-        self.pulled_arms = []
-        self.collected_rewards = np.array([])
+
         alpha = 10.0
         kernel = C(1.0, (1e-3, 1e3)) * RBF(1.0, (1e-3, 1e3))
         self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha ** 2,
                                            normalize_y=True, n_restarts_optimizer=9)
 
-    def update_observations(self, arm_idx, reward):
+    def update_observations(self, pulled_arm, reward):
         """
         Updates what the Gaussian Process has observed so far in two lists,
         collected_rewards and pulled arms
         """
+        # self.rewards_per_arm[pulled_arm].append(reward)
         self.collected_rewards = np.append(self.collected_rewards, reward)
-        self.pulled_arms.append(self.arms[arm_idx])
+        self.pulled_arms.append(self.arms[pulled_arm])
 
     def update_model(self):
         """
@@ -39,6 +45,7 @@ class GPTS_Learner:
         """
         Call the two functions above
         """
+        # self.t += 1
         self.update_observations(pulled_arm, reward)
         self.update_model()
 

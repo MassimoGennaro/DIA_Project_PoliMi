@@ -1,101 +1,110 @@
-from environment.BudgetEnvironment import *
-import numpy as np
+from environment.CampaignEnvironment import *
 from learners.Subcampaign_Learner import *
-from environment.Subcampaign import *
 from knapsack.knapsack import *
+import numpy as np
 import matplotlib.pyplot as plt
 
-max_budget = 5
-n_arms = max_budget + 1
 
-budgets = np.linspace(0, max_budget, n_arms)
-labels = ['FaY', 'FaA', 'NFaY']
+max_budget = 5.0
+n_arms = int(max_budget + 1)
+budgets = np.linspace(0.0, max_budget, n_arms)
+sigma = 10.0
 
-# Create a list of Subcampaign
-subcampaigns = [Subcampaign(l) for l in labels]
-num_subcampaigns = len(subcampaigns)
+phase_labels = ["Morning", "Evening", "Weekend"]
+phase_weights = [5/14, 5/14, 2/7]
+feature_labels = ["Young-Familiar", "Adult-Familiar", "Young-NotFamiliar"]
+
+T = 20
+n_experiments = 3
 
 
-T = 56
-n_experiments = 10
+
+########################
+# Clairvoyant Solution #
+########################
+
+opt_env = Campaign(budgets, phases=phase_labels, weights=phase_weights, sigma=0.0)
+for feature_label in feature_labels:
+    opt_env.add_subcampaign(label=feature_label)
+real_values = opt_env.round_all()
+opt_super_arm = knapsack_optimizer(real_values)
+opt_super_arm_reward = 0
+for (subc_id, pulled_arm) in enumerate(opt_super_arm):
+    reward = opt_env.subcampaigns[subc_id].round(pulled_arm)
+    opt_super_arm_reward += reward
 
 
-# Optimal Solution
-
-env_opt = BudgetEnvironment(subcampaigns)
-
-optimal_super_arm_reward = 0
-real_values = []
-for subc in env_opt.subcampaigns:
-    real_values.append([subc.real_function_aggr(b) for b in budgets])
-    optimal_super_arm = knapsack_optimizer(real_values)
-   #print("Optimal superarm:", optimal_super_arm)
-for (subcampaign_id, budget_arm) in optimal_super_arm:
-    optimal_reward = env_opt.get_subcampaign_by_idx(
-    subcampaign_id).real_function_aggr(budget_arm)
-    optimal_super_arm_reward += optimal_reward
- #print("Value of optimal superarm = ", optimal_super_arm_reward)
-opt_rewards_per_experiment = optimal_super_arm_reward
-
+#########################
+# Experimental Solution #
+#########################
 
 # Contains the rewards for each experiment (each element is a list of T rewards)
 gpts_rewards_per_experiment = []
 
-for e in range(n_experiments):
-    # Create the BudgetEnvironment usint the list of sucampaigns
-    env = BudgetEnvironment(subcampaigns)
+for e in range(0, n_experiments):
+    print("experiment: ", str(e+1))
 
-    # Create a list of Subcampaign_GP
-    s_learners = [Subcampaign_Learner(budgets, l) for l in labels]
-    # List to collect the reward at each time step
+    # create the environment
+    env = Campaign(budgets, phases=phase_labels, weights=phase_weights, sigma=sigma)
+
+    # list of GP-learners
+    subc_learners = []
+
+    # add subcampaings to the environment
+    # and create a GP-learner for each subcampaign
+    for feature_label in feature_labels:
+        env.add_subcampaign(label=feature_label)
+        subc_learners.append(Subcampaign_Learner(arms=budgets, label=feature_label))
+
+    # rewards for each time step
     rewards = []
 
-    for t in range(T):
-        # Sample from the Subcampaign_GP to get clicks estimations for each arm
-        # and build the table to pass to Knapsack
+    for t in range(0, T):
+        # sample clicks estimations from GP-learners
+        # and build the Knapsack table
         estimations = []
-        for s in s_learners:
-            estimate = [s.sample_from_GP(a) for a in budgets]
-            # in this way the estimation of the budget equal to zero is always zero
+        for subc_learner in subc_learners:
+            estimate = subc_learner.pull_arms()
+
+            # force 0 clicks for budget equal to 0
             estimate[0] = 0
-            # print(estimate)
-            if(sum(estimate) == 0):
-                estimate = [i * 1e-3 for i in range(n_arms)]
+
+            """if(sum(estimate) == 0):
+                estimate = [i * 1e-3 for i in range(n_arms)]"""
+
             estimations.append(estimate)
-        # Knapsack return the super_arm as [(subcampaign, best_budget to assign), ..]
+
+        # Knapsack return a list of pulled_arm
         super_arm = knapsack_optimizer(estimations)
 
-        # print(super_arm)
-
-        # For each subcampaign and budget related to it, use the budget to sample from the environment (click function)
-        # Then use the sample obtained to update the current Subcampaing_GP
         super_arm_reward = 0
-        for (subcampaign_id, budget_arm) in super_arm:
-            reward = env.get_subcampaign_by_idx(
-                subcampaign_id).aggr_sample(budget_arm)
-            # print(reward)
-            super_arm_reward += reward  # sum each arm reward in the reward of the super arm
-            s_learners[subcampaign_id].update(budget_arm, reward)
-        # this list contains the total reward for each time step
+
+        # sample the number of clicks from the environment
+        # and update the GP-learners in the pulled arms
+        for (subc_id, pulled_arm) in enumerate(super_arm):
+            arm_reward = env.subcampaigns[subc_id].round(pulled_arm)
+            super_arm_reward += arm_reward
+            subc_learners[subc_id].update(pulled_arm, arm_reward)
+
+        # store the reward for this timestamp
         rewards.append(super_arm_reward)
 
     gpts_rewards_per_experiment.append(rewards)
-    # print(gpts_rewards_per_experiment)
-    print(e+1)
 
 plt.figure()
 plt.ylabel("Number of Clicks")
 plt.xlabel("t")
+
+opt = [opt_super_arm_reward]*T
 mean_exp = np.mean(gpts_rewards_per_experiment, axis=0)
-opt = [opt_rewards_per_experiment for t in range(T)]
-regret = opt-mean_exp
+regret = opt_super_arm_reward-mean_exp
+
 # plt.plot(np.cumsum(regret), 'r' , label='Cumulative Regret')
 # plt.plot(np.cumsum(mean_exp), 'b',label='Cumulative Expected Rewards')
 # plt.plot(np.cumsum(opt), 'g',label='Cumulative Optimal Reward')
-
-plt.plot(regret, 'r' , label='Regret')
-plt.plot(mean_exp, 'b',label='Expected Rewards')
-plt.plot(opt, 'g',label='Optimal Reward')
+plt.plot(opt, 'g', label='Optimal Reward')
+plt.plot(mean_exp, 'b', label='Expected Reward')
+plt.plot(regret, 'r', label='Regret')
 
 plt.legend(loc="upper left")
 plt.show()

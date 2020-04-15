@@ -9,6 +9,11 @@ class NS_Subcampaign_Learner(GPTS_Learner):
         self.label = label
         self.window_size = int(round(math.sqrt(horizon)))
 
+    def pull_arms(self):
+        sampled_values = np.random.normal(self.means, self.sigmas)
+        sampled_values = np.maximum(0, sampled_values)  # avoid negative values
+        return sampled_values
+
     def update_model(self, t):
         """
         if t <= window size is the same function of the stationay learner
@@ -33,10 +38,3 @@ class NS_Subcampaign_Learner(GPTS_Learner):
     def update(self, pulled_arm, reward, t):
         self.update_observations(pulled_arm, reward)
         self.update_model(t)
-
-    def sample_from_GP(self, arm):
-        """
-        Sample from the GP with the given value of budget
-        """
-        arm_idx = self.find_arm(arm)
-        return self.pull_arm(arm_idx)
