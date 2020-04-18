@@ -29,7 +29,7 @@ feature_labels = ["Young-Familiar", "Adult-Familiar", "Young-NotFamiliar"]
 
 
 # Experiment settings
-n_experiments = 2   # number of experiments
+n_experiments = 5   # number of experiments
 sigma = 2.0         # sampling variance
 
 
@@ -169,8 +169,8 @@ regret = opt - mean_exp
 # plt.plot(np.cumsum(mean_exp), 'b',label='Cumulative Expected Rewards')
 # plt.plot(np.cumsum(opt), 'g',label='Cumulative Optimal Reward')
 
-plt.plot(regret_SW, 'r', label='Regret SW')
-plt.plot(regret, 'r--', label='Regret no SW')
+plt.plot(np.cumsum(regret_SW), 'r', label='Regret SW')
+plt.plot(np.cumsum(regret), 'r--', label='Regret no SW')
 plt.plot(mean_exp_SW, 'b', label='Expected Reward SW')
 plt.plot(mean_exp, 'b--', label='Expected Reward no SW')
 plt.plot(opt, 'g', label='Optimal Reward')
