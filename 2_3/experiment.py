@@ -39,13 +39,13 @@ class Experiment:
             self.opt_super_arm_reward += reward
 
         #########################
-        # Experimental Solution #
+        # Experiment Solution #
         #########################
 
 
 
         for e in range(0, self.n_experiments):
-            print("experiment: ", str(e + 1))
+            print("Performingexperiment: ", str(e + 1))
 
             # create the environment
             env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=self.sigma)
@@ -99,7 +99,7 @@ class Experiment:
     def plot_experiment(self):
 
         if not self.ran:
-            return None
+            return "Run the experiment before plotting"
 
         plt.figure()
         plt.ylabel("Number of Clicks")
@@ -117,7 +117,7 @@ class Experiment:
 
     def plot_regret(self):
         if not self.ran:
-            return None
+            return 'Run the experiment before plotting'
         
         plt.figure()
         plt.ylabel("Regret")
