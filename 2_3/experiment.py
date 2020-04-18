@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Experiment:
-    def __init__(self, max_budget=5.0, sigma=2.0, n_exp=3,horizon=20,phase_weights=[5 / 14, 5 / 14, 4 / 14]):
+    def __init__(self, max_budget=5.0, sigma=2.0, n_exp=10,horizon=56,phase_weights=[5 / 14, 5 / 14, 4 / 14]):
         # Budget settings
         self.max_budget = max_budget
         # Experiment settings
@@ -96,7 +96,7 @@ class Experiment:
 
         self.ran = True
 
-    def plot(self):
+    def plot_experiment(self):
 
         if not self.ran:
             return None
@@ -107,18 +107,29 @@ class Experiment:
 
         opt = [self.opt_super_arm_reward] * self.T
         mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
-        regret = self.opt_super_arm_reward - mean_exp
+        
 
-        # plt.plot(np.cumsum(regret), 'r' , label='Cumulative Regret')
-        # plt.plot(np.cumsum(mean_exp), 'b',label='Cumulative Expected Rewards')
-        # plt.plot(np.cumsum(opt), 'g',label='Cumulative Optimal Reward')
+        
         plt.plot(opt, 'g', label='Optimal Reward')
         plt.plot(mean_exp, 'b', label='Expected Reward')
-        plt.plot(regret, 'r', label='Regret')
-
         plt.legend(loc="upper left")
         plt.show()
 
-
+    def plot_regret(self):
+        if not self.ran:
+            return None
+        
+        plt.figure()
+        plt.ylabel("Regret")
+        plt.xlabel("t")
+        
+        opt = [self.opt_super_arm_reward] * self.T
+        mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
+        regret = np.cumsum(self.opt_super_arm_reward - mean_exp)
+        
+        plt.plot(regret, 'r', label='Regret')
+        plt.legend(loc="upper left")
+        plt.show()
+        
 
 
