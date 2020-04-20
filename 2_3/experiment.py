@@ -54,7 +54,7 @@ class Experiment:
         Experimental Solution
         :return:
         """
-
+        self.gpts_rewards_per_experiment = []
         self.opt_rewards_per_experiment = [self.opt_super_arm_reward] * horizon
 
         for e in range(0, n_experiments):
@@ -75,7 +75,7 @@ class Experiment:
             # rewards for each time step
             rewards = []
 
-            for t in range(0, self.T):
+            for t in range(0, horizon):
                 # sample clicks estimations from GP-learners
                 # and build the Knapsack table
                 estimations = []
