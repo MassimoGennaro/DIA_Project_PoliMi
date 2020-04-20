@@ -4,51 +4,64 @@ from knapsack.knapsack import *
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Experiment:
-    def __init__(self, max_budget=5.0, sigma=2.0, n_exp=10,horizon=56,phase_weights=[5 / 14, 5 / 14, 4 / 14]):
+    def __init__(self, max_budget=5.0, n_arms=6):
         # Budget settings
         self.max_budget = max_budget
-        # Experiment settings
-        self.sigma = sigma,
-        self.n_experiments = n_exp
-        self.T = horizon # Time Horizon
-        self.n_arms = int(self.max_budget + 1)
+        self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
+
         # Phase settings
         self.phase_labels = ["Morning", "Evening", "Weekend"]
-        self.phase_weights = phase_weights  # the sum must be equal to 1
+        self.phase_weights = [5 / 14, 5 / 14, 4 / 14]  # must sum up to 1
+
         # Class settings
         self.feature_labels = ["Young-Familiar", "Adult-Familiar", "Young-NotFamiliar"]
-        # Contains the rewards for each experiment (each element is a list of T rewards)
+
+        self.opt_super_arm_reward = self.run_clairvoyant()
+
+        ## Rewards for each experiment (each element is a list of T rewards)
+        self.opt_rewards_per_experiment = []
         self.gpts_rewards_per_experiment = []
+
         self.ran = False
 
-    def run(self):
-        ########################
-        # Clairvoyant Solution #
-        ########################
+
+    def run_clairvoyant(self):
+        """
+        Clairvoyant Solution
+        :return: list of optimal super-arm reward for each phase
+        """
 
         opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=0.0)
         for feature_label in self.feature_labels:
             opt_env.add_subcampaign(label=feature_label)
+
         real_values = opt_env.round_all()
         opt_super_arm = knapsack_optimizer(real_values)
-        self.opt_super_arm_reward = 0
+
+        opt_super_arm_reward = 0
         for (subc_id, pulled_arm) in enumerate(opt_super_arm):
             reward = opt_env.subcampaigns[subc_id].round(pulled_arm)
-            self.opt_super_arm_reward += reward
+            opt_super_arm_reward += reward
 
-        #########################
-        # Experiment Solution #
-        #########################
+        return opt_super_arm_reward
 
 
+    def run(self, n_experiments=10, sigma=2.0, horizon=56):
+        """
+        Experimental Solution
+        :return:
+        """
 
-        for e in range(0, self.n_experiments):
-            print("Performingexperiment: ", str(e + 1))
+        self.opt_rewards_per_experiment = [self.opt_super_arm_reward] * horizon
+
+        for e in range(0, n_experiments):
+            print("Performing experiment: ", str(e + 1))
 
             # create the environment
-            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=self.sigma)
+            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=sigma)
 
             # list of GP-learners
             subc_learners = []
@@ -97,7 +110,6 @@ class Experiment:
         self.ran = True
 
     def plot_experiment(self):
-
         if not self.ran:
             return "Run the experiment before plotting"
 
@@ -105,31 +117,26 @@ class Experiment:
         plt.ylabel("Number of Clicks")
         plt.xlabel("t")
 
-        opt = [self.opt_super_arm_reward] * self.T
+        opt_exp = self.opt_rewards_per_experiment
         mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
-        
 
-        
-        plt.plot(opt, 'g', label='Optimal Reward')
+        plt.plot(opt_exp, 'g', label='Optimal Reward')
         plt.plot(mean_exp, 'b', label='Expected Reward')
+
         plt.legend(loc="upper left")
         plt.show()
 
     def plot_regret(self):
         if not self.ran:
             return 'Run the experiment before plotting'
-        
+
         plt.figure()
         plt.ylabel("Regret")
         plt.xlabel("t")
-        
-        opt = [self.opt_super_arm_reward] * self.T
+
         mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
         regret = np.cumsum(self.opt_super_arm_reward - mean_exp)
-        
+
         plt.plot(regret, 'r', label='Regret')
         plt.legend(loc="upper left")
         plt.show()
-        
-
-
