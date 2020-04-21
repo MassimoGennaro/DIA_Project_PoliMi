@@ -1,0 +1,94 @@
+{
+    "subcampaings": [
+        {
+            "id": 1,
+            "Young-Familiar": {
+                "Morning": {
+                    "max_value": 100,
+                    "speed": 1
+                },
+                "Evening": {
+                    "max_value": 150,
+                    "speed": 1
+                },
+                "Weekend": {
+                    "max_value": 300,
+                    "speed": 1
+                }
+            },
+            "Adult-Familiar": {
+                "Morning": {
+                    "max_value": 10,
+                    "speed": 1
+                },
+                "Evening": {
+                    "max_value": 100,
+                    "speed": 1
+                },
+                "Weekend": {
+                    "max_value": 150,
+                    "speed": 1
+                }
+            },
+            "Young-NotFamiliar": {
+                "Morning": {
+                    "max_value": 70,
+                    "speed": 1
+                },
+                "Evening": {
+                    "max_value": 50,
+                    "speed": 1
+                },
+                "Weekend": {
+                    "max_value": 100,
+                    "speed": 1
+                }
+            }
+        },
+        {
+            "id": 2,
+            "Young-Familiar": {
+                "Morning": {
+                    "max_value": 10,
+                    "speed": 1
+                },
+                "Evening": {
+                    "max_value": 15,
+                    "speed": 1
+                },
+                "Weekend": {
+                    "max_value": 30,
+                    "speed": 1
+                }
+            },
+            "Adult-Familiar": {
+                "Morning": {
+                    "max_value": 1,
+                    "speed": 1
+                },
+                "Evening": {
+                    "max_value": 10,
+                    "speed": 1
+                },
+                "Weekend": {
+                    "max_value": 15,
+                    "speed": 1
+                }
+            },
+            "Young-NotFamiliar": {
+                "Morning": {
+                    "max_value": 7,
+                    "speed": 1
+                },
+                "Evening": {
+                    "max_value": 5,
+                    "speed": 1
+                },
+                "Weekend": {
+                    "max_value": 10,
+                    "speed": 1
+                }
+            }
+        }
+    ]
+}
