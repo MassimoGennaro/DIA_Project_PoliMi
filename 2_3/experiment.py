@@ -1,23 +1,27 @@
 from environment.CampaignEnvironment import *
 from learners.Subcampaign_Learner import *
 from knapsack.knapsack import *
+from utils.build_env import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class Experiment:
-    def __init__(self, max_budget=5.0, n_arms=6):
+    def __init__(self, max_budget=5.0, n_arms=6, campaign_id=0):
         # Budget settings
         self.max_budget = max_budget
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
+        self.environment = Environment(campaign_id)
+        
+        
         # Phase settings
-        self.phase_labels = ["Morning", "Evening", "Weekend"]
-        self.phase_weights = [5 / 14, 5 / 14, 4 / 14]  # must sum up to 1
+        self.phase_labels = self.environment.phase_labels
+        self.phase_weights = self.environment.phase_weights  # must sum up to 1
 
         # Class settings
-        self.feature_labels = ["Young-Familiar", "Adult-Familiar", "Young-NotFamiliar"]
+        self.feature_labels = self.environment.feature_labels
 
         self.opt_super_arm_reward = self.run_clairvoyant()
 
@@ -34,7 +38,7 @@ class Experiment:
         :return: list of optimal super-arm reward for each phase
         """
 
-        opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=0.0)
+        opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=0.0, click_functions = self.environment.click_functions)
         for feature_label in self.feature_labels:
             opt_env.add_subcampaign(label=feature_label)
 
@@ -61,7 +65,7 @@ class Experiment:
             print("Performing experiment: ", str(e + 1))
 
             # create the environment
-            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=sigma)
+            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=sigma, click_functions = self.environment.click_functions)
 
             # list of GP-learners
             subc_learners = []

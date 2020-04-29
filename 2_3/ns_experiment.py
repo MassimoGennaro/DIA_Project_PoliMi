@@ -2,12 +2,13 @@ from environment.CampaignEnvironment import *
 from learners.NS_Subcampaign_Learner import NS_Subcampaign_Learner
 from learners.Subcampaign_Learner import Subcampaign_Learner
 from knapsack.knapsack import *
+from utils.build_env import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class NonStationaryExperiment:
-    def __init__(self, max_budget=5.0, n_arms=6, sample_factor=4):
+    def __init__(self, max_budget=5.0, n_arms=6, sample_factor=4, campaign_id=0):
         """
         <description>
         :param max_budget: maximal value of budget
@@ -20,17 +21,18 @@ class NonStationaryExperiment:
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
+        self.environment = Environment(campaign_id)
+        
         # Phase settings
-        self.phase_labels = ["Morning", "Evening", "Weekend"]
-        self.phase_weights = [5 / 14, 5 / 14, 4 / 14]  # the sum must be equal to 1
+        self.phase_labels = self.environment.phase_labels
+        self.phase_weights = self.environment.phase_weights
         self.phase_list = ([self.phase_labels.index("Morning")] * sample_factor + [
             self.phase_labels.index("Evening")] * sample_factor) * 5 + \
                           [self.phase_labels.index("Weekend")] * 4 * sample_factor
         self.phase_len = len(self.phase_list)
 
         # Class settings
-        self.feature_labels = ["Young-Familiar",
-                               "Adult-Familiar", "Young-NotFamiliar"]
+        self.feature_labels = self.environment.feature_labels
 
         self.optimal_super_arm_reward_phase = self.run_clairvoyant()
 
@@ -40,6 +42,8 @@ class NonStationaryExperiment:
         self.SWgpts_rewards_per_experiment = []
 
         self.ran = False
+        
+        print(self.phase_labels,self.phase_weights,self.phase_list, self.feature_labels)
 
 
     def run_clairvoyant(self):
@@ -49,7 +53,7 @@ class NonStationaryExperiment:
         """
 
         opt_env = Campaign(self.budgets, phases=self.phase_labels,
-                           weights=self.phase_weights, sigma=0.0)
+                           weights=self.phase_weights, sigma=0.0, click_functions=self.environment.click_functions)
         for feature_label in self.feature_labels:
             opt_env.add_subcampaign(label=feature_label)
 
@@ -87,7 +91,7 @@ class NonStationaryExperiment:
 
             # Create the BudgetEnvironment usint the list of sucampaigns
             env = Campaign(self.budgets, phases=self.phase_labels,
-                           weights=self.phase_weights, sigma=sigma)
+                           weights=self.phase_weights, sigma=sigma, click_functions=self.environment.click_functions)
 
             # list of GP-learners
             subc_learners = []

@@ -1,0 +1,61 @@
+{
+    "campaigns": [
+        {
+            "sigma" : 2.0,
+            "phase_weights": {
+                "Morning":0.3571,
+                "Evening":0.3571,
+                "Weekend":0.2857
+            },
+            "phases": [
+                "Morning",
+                "Evening",
+                "Weekend"
+            ],
+            "subcampaigns": {
+                "Young-Familiar": [
+                    {
+                        "max_value": 100,
+                        "speed": 1
+                    },
+                    {
+                        "max_value": 150,
+                        "speed": 1
+                    },
+                    {
+                        "max_value": 300,
+                        "speed": 1
+                    }
+                ],
+                "Adult-Familiar": [
+                    {
+                        "max_value": 10,
+                        "speed": 1
+                    },
+                    {
+                        "max_value": 100,
+                        "speed": 1
+                    },
+                    {
+                        "max_value": 150,
+                        "speed": 1
+                    }
+                ],
+                "Young-NotFamiliar": [
+                    {
+                        "max_value": 70,
+                        "speed": 1
+                    },
+                    {
+                        "max_value": 50,
+                        "speed": 1
+                    },
+                    {
+                        "max_value": 100,
+                        "speed": 1
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,9 +1,8 @@
-from environment.click_functions import *
 import numpy as np
 
 
 class Campaign:
-    def __init__(self, budgets, phases, weights, sigma):
+    def __init__(self, budgets, phases, weights, sigma, click_functions):
         self.budgets = budgets
 
         self.phases = phases
@@ -11,9 +10,11 @@ class Campaign:
 
         self.subcampaigns = []
         self.sigma = sigma
+        self.click_functions = click_functions
 
     def get_functions(self, label):
-        return [click_functions[label][phase] for phase in self.phases]
+        print([self.click_functions[label][phase] for phase in self.phases])
+        return [self.click_functions[label][phase] for phase in self.phases]
 
     def add_subcampaign(self, label):
         self.subcampaigns.append(
