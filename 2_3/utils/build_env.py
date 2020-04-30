@@ -7,13 +7,13 @@ class Environment():
         self.id = id
         with open('utils/sub_camp_config.json') as json_file:
             data = json.load(json_file)
-            campaign = data["campaigns"][id]
-            self.sigma = campaign["sigma"]
-            self.phase_labels = campaign["phases"]
-            self.phase_weights = list(campaign["phase_weights"].values())
-            self.subcampaigns = campaign["subcampaigns"]
-            self.feature_labels = list(self.subcampaigns.keys())
-            self.click_functions = self.create_functions()
+        campaign = data["campaigns"][id]
+        self.sigma = campaign["sigma"]
+        self.phase_labels = campaign["phases"]
+        self.phase_weights = list(campaign["phase_weights"].values())
+        self.subcampaigns = campaign["subcampaigns"]
+        self.feature_labels = list(self.subcampaigns.keys())
+        self.click_functions = self.create_functions()
             
     
     def create_functions(self):
@@ -25,8 +25,8 @@ class Environment():
             for i,p in enumerate(self.phase_labels):
                 speed = self.subcampaigns[f][i]["speed"]
                 max_value = self.subcampaigns[f][i]["max_value"]
-                click_functions[f][p] = lambda x: (
-                    1 - np.exp(-speed*x)) * max_value
-        #print(click_functions)
+                l = lambda x: (1 - np.exp(-(speed)*x)) * max_value
+                click_functions[f][p] = l
+        
 
         return click_functions
