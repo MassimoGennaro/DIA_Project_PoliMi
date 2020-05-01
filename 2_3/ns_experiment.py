@@ -2,13 +2,12 @@ from environment.CampaignEnvironment import *
 from learners.NS_Subcampaign_Learner import NS_Subcampaign_Learner
 from learners.Subcampaign_Learner import Subcampaign_Learner
 from knapsack.knapsack import *
-from utils.build_env import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class NonStationaryExperiment:
-    def __init__(self, max_budget=5.0, n_arms=6, sample_factor=4, campaign_id=0):
+    def __init__(self, max_budget=5.0, n_arms=6, sample_factor=8, env_id=0):
         """
         <description>
         :param max_budget: maximal value of budget
@@ -21,18 +20,23 @@ class NonStationaryExperiment:
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        self.environment = Environment(campaign_id)
-        
+        env = Environment(env_id)
+
         # Phase settings
-        self.phase_labels = self.environment.phase_labels
-        self.phase_weights = self.environment.phase_weights
-        self.phase_list = ([self.phase_labels.index("Morning")] * sample_factor + [
-            self.phase_labels.index("Evening")] * sample_factor) * 5 + \
-                          [self.phase_labels.index("Weekend")] * 4 * sample_factor
+        self.phase_labels = env.phase_labels
+        self.phase_weights = env.get_phase_weights()
+        self.phase_list = env.get_phase_list(sample_factor)
         self.phase_len = len(self.phase_list)
 
         # Class settings
-        self.feature_labels = self.environment.feature_labels
+        self.feature_labels = env.feature_labels
+
+        # Click functions
+        self.click_functions = env.click_functions
+
+        # Experiment settings
+        self.window_size = int(sample_factor-2)
+        self.sigma = env.sigma
 
         self.optimal_super_arm_reward_phase = self.run_clairvoyant()
 
@@ -42,8 +46,6 @@ class NonStationaryExperiment:
         self.SWgpts_rewards_per_experiment = []
 
         self.ran = False
-        
-        print(self.phase_labels,self.phase_weights,self.phase_list, self.feature_labels)
 
 
     def run_clairvoyant(self):
@@ -52,10 +54,9 @@ class NonStationaryExperiment:
         :return: list of optimal super-arm reward for each phase
         """
 
-        opt_env = Campaign(self.budgets, phases=self.phase_labels,
-                           weights=self.phase_weights, sigma=0.0, click_functions=self.environment.click_functions)
+        opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)
         for feature_label in self.feature_labels:
-            opt_env.add_subcampaign(label=feature_label)
+            opt_env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
 
         optimal_super_arm_reward_phase = []
         for phase in range(len(self.phase_labels)):
@@ -72,12 +73,11 @@ class NonStationaryExperiment:
 
         return optimal_super_arm_reward_phase
 
-    def run(self, n_experiments=10, sigma=2.0, horizon=56):
+    def run(self, n_experiments=10, horizon=56):
         """
         Experimental Solution
         :return:
         """
-
         # optimal reward per experiment
         self.opt_rewards_per_experiment = []
         for t in range(0, horizon):
@@ -89,9 +89,8 @@ class NonStationaryExperiment:
         for e in range(0, n_experiments):
             print("Performing experiment: ", str(e + 1))
 
-            # Create the BudgetEnvironment usint the list of sucampaigns
-            env = Campaign(self.budgets, phases=self.phase_labels,
-                           weights=self.phase_weights, sigma=sigma, click_functions=self.environment.click_functions)
+            # Create the environment
+            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=self.sigma)
 
             # list of GP-learners
             subc_learners = []
@@ -100,13 +99,11 @@ class NonStationaryExperiment:
             # add subcampaigns to the environment
             # and create a GP-learner for each subcampaign
             for feature_label in self.feature_labels:
-                env.add_subcampaign(label=feature_label)
+                env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
                 # Non Sliding Windows
-                subc_learners.append(Subcampaign_Learner(
-                    arms=self.budgets, label=feature_label))
+                subc_learners.append(Subcampaign_Learner(arms=self.budgets, label=feature_label))
                 # Sliding Window
-                SW_s_learners.append(NS_Subcampaign_Learner(
-                    arms=self.budgets, label=feature_label, horizon=horizon))
+                SW_s_learners.append(NS_Subcampaign_Learner(arms=self.budgets, label=feature_label, window_size=self.window_size))
 
             sw_rewards = []
             rewards = []
@@ -220,4 +217,3 @@ class NonStationaryExperiment:
 
         plt.legend(loc="upper left")
         plt.show()
-

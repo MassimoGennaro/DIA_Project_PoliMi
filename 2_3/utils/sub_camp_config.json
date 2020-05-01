@@ -1,17 +1,13 @@
 {
     "campaigns": [
         {
-            "sigma" : 2.0,
-            "phase_weights": {
-                "Morning":0.3571,
-                "Evening":0.3571,
-                "Weekend":0.2857
-            },
+            "sigma": 2.0,
             "phases": [
                 "Morning",
                 "Evening",
                 "Weekend"
             ],
+            "phase_seq": [0,1,0,1,0,1,0,1,0,1,2,2,2,2],
             "subcampaigns": {
                 "Young-Familiar": [
                     {
@@ -59,3 +55,4 @@
         }
     ]
 }
+

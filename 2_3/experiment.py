@@ -1,27 +1,31 @@
 from environment.CampaignEnvironment import *
 from learners.Subcampaign_Learner import *
 from knapsack.knapsack import *
-from utils.build_env import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class Experiment:
-    def __init__(self, max_budget=5.0, n_arms=6, campaign_id=0):
+    def __init__(self, max_budget=5.0, n_arms=6, env_id=0):
         # Budget settings
         self.max_budget = max_budget
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        self.environment = Environment(campaign_id)
-        
-        
+        env = Environment(env_id)
+
         # Phase settings
-        self.phase_labels = self.environment.phase_labels
-        self.phase_weights = self.environment.phase_weights  # must sum up to 1
+        self.phase_labels = env.phase_labels
+        self.phase_weights = env.get_phase_weights()
 
         # Class settings
-        self.feature_labels = self.environment.feature_labels
+        self.feature_labels = env.feature_labels
+
+        # Click functions
+        self.click_functions = env.click_functions
+
+        # Experiment settings
+        self.sigma = env.sigma
 
         self.opt_super_arm_reward = self.run_clairvoyant()
 
@@ -38,9 +42,9 @@ class Experiment:
         :return: list of optimal super-arm reward for each phase
         """
 
-        opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=0.0, click_functions = self.environment.click_functions)
+        opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)
         for feature_label in self.feature_labels:
-            opt_env.add_subcampaign(label=feature_label)
+            opt_env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
 
         real_values = opt_env.round_all()
         opt_super_arm = knapsack_optimizer(real_values)
@@ -53,7 +57,7 @@ class Experiment:
         return opt_super_arm_reward
 
 
-    def run(self, n_experiments=10, sigma=2.0, horizon=56):
+    def run(self, n_experiments=10, horizon=56):
         """
         Experimental Solution
         :return:
@@ -65,7 +69,7 @@ class Experiment:
             print("Performing experiment: ", str(e + 1))
 
             # create the environment
-            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=sigma, click_functions = self.environment.click_functions)
+            env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=self.sigma)
 
             # list of GP-learners
             subc_learners = []
@@ -73,7 +77,7 @@ class Experiment:
             # add subcampaings to the environment
             # and create a GP-learner for each subcampaign
             for feature_label in self.feature_labels:
-                env.add_subcampaign(label=feature_label)
+                env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
                 subc_learners.append(Subcampaign_Learner(arms=self.budgets, label=feature_label))
 
             # rewards for each time step

@@ -4,10 +4,10 @@ import math
 
 class NS_Subcampaign_Learner(GPTS_Learner):
 
-    def __init__(self, arms, label, horizon):
+    def __init__(self, arms, label, window_size):
         super().__init__(arms)
         self.label = label
-        self.window_size = int(round(math.sqrt(horizon)))
+        self.window_size = window_size #int(round(math.sqrt(horizon)))
 
     def pull_arms(self):
         sampled_values = np.random.normal(self.means, self.sigmas)
