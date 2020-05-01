@@ -24,7 +24,13 @@ class Environment:
             for phase in campaign["subcampaigns"][feature]:
                 max_value = phase["max_value"]
                 speed = phase["speed"]
+
+                assert (max_value >= 0), "Max value not valid for "+feature+": "+str(max_value)
+                assert (0 <= speed <= 1), "Speed value not valid for "+feature+": "+str(speed)
+
                 self.click_functions[feature].append( lambda x, s=speed, m=max_value: self.function(x, s, m) )
+
+            assert (len(self.click_functions[feature])==len(self.phase_labels)), "Not a valid number of subphases for " + feature
 
         """self.click_functions = {
             "Young-Familiar": [
