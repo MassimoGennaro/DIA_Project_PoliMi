@@ -56,17 +56,27 @@ class GPTS_Learner:
         Note that it return one or more values as sample_values, depending on the
         length of means and sigmas
         """
-        sampled_value = np.random.normal(self.means[arm_idx], self.sigmas[arm_idx])
-        sampled_value = np.maximum(0, sampled_value)  # to avoid negative values
+        sampled_value = np.random.normal(
+            self.means[arm_idx], self.sigmas[arm_idx])
+        # to avoid negative values
+        sampled_value = np.maximum(0, sampled_value)
         return sampled_value
 
     def find_arm(self, arm):
         """
         Return the index of the given arm contained in self.arms if exixsts,
         False otherwise
-        
+
         """
         for idx in range(self.n_arms):
             if self.arms[idx] == arm:
                 return idx
         return False
+
+    def learn_kernel_hyperparameters(self, samples):
+        x = np.atleast_2d(samples[0]).T
+        y = [y for (x, y) in zip(samples[0], samples[1])]
+        self.gaussian_process.fit(x, y)
+        self.gaussian_process = GaussianProcessRegressor(kernel=self.gaussian_process.kernel_,
+                                                         alpha=self.gaussian_process.alpha,
+                                                         normalize_y=True, n_restarts_optimizer=0)

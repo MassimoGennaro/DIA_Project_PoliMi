@@ -118,12 +118,16 @@ class Experiment:
                 Here we need to multiply each cell of click_estimations for the (estimated) best expected value of each class, this values come from the pricing algorithm
                 and then pass the updated table to knapsack
                 '''
+                expected_values = [2,3,4] # TODO there we will call a function from the pricing part
+                values = [[expected_values[a]*click_estimations[a][b] for b in range(self.n_arms)] for a in range(len(expected_values))]
+                
                 # Knapsack return a list of pulled_arm
-                super_arm = knapsack_optimizer(click_estimations)
+                super_arm = knapsack_optimizer(values)
                 '''
                 We need to extract the original number of click corresponding to the selected budget of a given class and give them to the pricing algorithm
                 '''
-                best_n_clicks = [click_estimations[subc_id, budget] for (subc_id, pulled_arm) in enumerate(super_arm)] # this list goes to pricing
+                best_n_clicks = [] # this list goes to pricing
+                
                 
                 super_arm_reward = 0
                 # sample the number of clicks from the environment
@@ -133,10 +137,15 @@ class Experiment:
                     arm_reward = env.subcampaigns[subc_id].round(pulled_arm)
                     subc_learners[subc_id].update(pulled_arm, arm_reward)
                     
+                    best_n_clicks.append(arm_reward)
+                    
                     #The super arm reward must be modified to store (and then plot) not only the number of click but a product (number_of_click * expected_value)
                     #the second term will be the value AFTER the pricing algorithm (for each class)
-                    super_arm_reward += arm_reward # * expected_value[subc_id]
+                    #super_arm_reward += arm_reward # * expected_value[subc_id]
                 # store the reward for this timestamp
+                
+                super_arm_reward = todo(best_n_clicks) # TODO todo function must instance three experiment, one for each class, find the best expected value (conv_rate * price)
+                                                        # and multiply this with best_n_clicks, finally sum these three products
                 rewards.append(super_arm_reward)
 
             self.gpts_rewards_per_experiment.append(rewards)
