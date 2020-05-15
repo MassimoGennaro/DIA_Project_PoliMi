@@ -10,3 +10,4 @@ class Subcampaign_Learner(GPTS_Learner):
         sampled_values = np.random.normal(self.means, self.sigmas)
         sampled_values = np.maximum(0, sampled_values)  # avoid negative values
         return sampled_values
+    

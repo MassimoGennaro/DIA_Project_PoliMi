@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 class NonStationaryExperiment:
-    def __init__(self, max_budget=5.0, n_arms=6, sample_factor=8, env_id=0):
+    def __init__(self, max_budget=5.0, n_arms=6, sample_factor=8, env_id=0, window_size = None, estimate_hyperparam = False):
         """
         <description>
         :param max_budget: maximal value of budget
@@ -35,8 +35,12 @@ class NonStationaryExperiment:
         self.click_functions = env.click_functions
 
         # Experiment settings
-        self.window_size = int(sample_factor-2)
+        if window_size == None:
+            self.window_size = int(sample_factor-2)
+        else:
+            self.window_size = int(round(window_size))
         self.sigma = env.sigma
+        self.estimate_hyperparam = estimate_hyperparam
 
         self.optimal_super_arm_reward_phase = self.run_clairvoyant()
 
@@ -98,12 +102,27 @@ class NonStationaryExperiment:
 
             # add subcampaigns to the environment
             # and create a GP-learner for each subcampaign
-            for feature_label in self.feature_labels:
+            for subc_id, feature_label in enumerate(self.feature_labels):
                 env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
-                # Non Sliding Windows
-                subc_learners.append(Subcampaign_Learner(arms=self.budgets, label=feature_label))
-                # Sliding Window
-                SW_s_learners.append(NS_Subcampaign_Learner(arms=self.budgets, label=feature_label, window_size=self.window_size))
+                
+                if self.estimate_hyperparam == True:
+                    clicks = env.subcampaigns[subc_id].round_all(phase = 0)
+                    samples = [self.budgets, clicks]
+                    
+                    learner = Subcampaign_Learner(arms=self.budgets, label=feature_label)
+                    learner.learn_kernel_hyperparameters(samples)
+                    subc_learners.append(learner)
+                    
+                    sw_learner = NS_Subcampaign_Learner(arms=self.budgets, label=feature_label, window_size=self.window_size)
+                    sw_learner.learn_kernel_hyperparameters(samples)
+                    SW_s_learners.append(sw_learner)
+                
+                
+                else:
+                    # Non Sliding Windows
+                    subc_learners.append(Subcampaign_Learner(arms=self.budgets, label=feature_label))
+                    # Sliding Window
+                    SW_s_learners.append(NS_Subcampaign_Learner(arms=self.budgets, label=feature_label, window_size=self.window_size))
 
             sw_rewards = []
             rewards = []

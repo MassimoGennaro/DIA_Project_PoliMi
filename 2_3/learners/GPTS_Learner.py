@@ -76,7 +76,7 @@ class GPTS_Learner:
     def learn_kernel_hyperparameters(self, samples):
         x = np.atleast_2d(samples[0]).T
         y = [y for (x, y) in zip(samples[0], samples[1])]
-        self.gaussian_process.fit(x, y)
-        self.gaussian_process = GaussianProcessRegressor(kernel=self.gaussian_process.kernel_,
-                                                         alpha=self.gaussian_process.alpha,
+        self.gp.fit(x, y)
+        self.gp = GaussianProcessRegressor(kernel=self.gp.kernel_,
+                                                         alpha=self.gp.alpha,
                                                          normalize_y=True, n_restarts_optimizer=0)
