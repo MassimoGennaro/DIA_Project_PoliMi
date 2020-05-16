@@ -1,6 +1,7 @@
 #modules
 import numpy as np
 import random
+import learner
 
 from dia_code import *
 from learner import *
@@ -68,7 +69,7 @@ class Person_Manager():
 class Context():
     def __init__(self, context_id, subspace, learner):
         # ogni contesto viene identificato progressivamente da un id
-        #self.context_id = context_id inutile?
+        self.context_id = context_id
 
         # variables è il sottospazio delle feature di cui si occupa il contesto
         # è una lista di tuple lunghe quanto il numero di variabili. (e.g. {(y,f), (y,u)})
@@ -86,37 +87,39 @@ class Context():
         self.rewards_log.append((features_person, pulled_arm, reward))
 
 #dal log toglie tutti i dati che riguardano una feature che NON vogliamo considerare
-    def fetch_log(feature):
+    def fetch_log(self, feature):
         new_log = []
-        for i in range(len(self.rewards_log)) if feature not in self.rewards_log[i][0]:
-            new_log.append(self.rewards_log[i])
+        for i in range(len(self.rewards_log)):
+            if feature not in self.rewards_log[i][0]:
+                new_log.append(self.rewards_log[i])
+        return new_log
 
 #dato un log calgola il learner derivante da quel log
-    def learner_sub_context(log, candidates_values):
+    def learner_sub_context(self, log, candidates_values):
         new_learner = TS_Learner(self.learner.n_arms)
         for i in range(len(log)):
             new_learner.update(log[i][1], log[i][2])
         return new_lerner
 
 #data una feature dalla quale splittare calcola i valori di expected reward POST split. Sono la parte sinistra della split condition
-    def val_after_split(feature, candidates_values):
-        sub_1 = fetch_log(feature)
-        sub_2 = [x in self.rewards_log not in sub_1]
-        prob_1 = len(sub_1)/len(rewards_log)
-        prob_2 = len(sub_2)/len(rewards_log)
-        lern_1 = learner_sub_context(sub_1, candidates_values)
-        lern_2 = learner_sub_context(sub_2, candidates_values)
+    def val_after_split(self, feature, candidates_values):
+        sub_1 = self.fetch_log(feature)
+        sub_2 = [x for x in self.rewards_log not in sub_1]
+        prob_1 = len(sub_1)/len(self.rewards_log)
+        prob_2 = len(sub_2)/len(self.rewards_log)
+        lern_1 = self.learner_sub_context(sub_1, candidates_values)
+        lern_2 = self.learner_sub_context(sub_2, candidates_values)
         exp_1 = lern_1.best_arm_lower_bound(candidates_values)
         exp_2 = lern_2.best_arm_lower_bound(candidates_values)
         ris = [prob_1*exp_1+prob_2*exp_2, lern_1, lern_2]
         return ris
 
 #verifica che la split condition sia verificata e nel caso restituisce una tupla con (feature, val_after_split, lerner  sub contesto 1, lerner  sub contesto 2)
-    def split_condition(feature, candidates_values):
+    def split_condition(self, feature, candidates_values):
         ris = []
-        val_after_split = val_after_split(feature, candidates_values)
-        if val_after[0] > self.learner.best_arm_lower_bound(candidates_values):
-            ris = [feature, val_after[0], val_after[1], val_after[2]]
+        val_after_split = self.val_after_split(feature, candidates_values)
+        if self.val_after[0] > self.learner.best_arm_lower_bound(candidates_values):
+            ris = [feature, self.val_after[0], self.val_after[1], self.val_after[2]]
         return ris
 
 
@@ -127,21 +130,19 @@ class Context():
         # scelgo l'indice del best arm, [[[quello selezionato di più]]]--> NO!
         #best_arm = np.argmax(np.sum(self.learner.beta_parameters, axis=1)) SBAGLIATO!!
         #best arm è quello con miglior prodotto probabilità x value
-        best_arm = self.learner.best_arm(candidate_value)
+        best_arm = self.learner.best_arm(candidates_values)
         # calcolo il suo valore atteso, deve essere usato per la split condition
-        best_expected_value = best_expected_value(self.learner.beta_parameters, best_arm, candidates_values)
+        #best_expected_value = best_expected_value(self.learner.beta_parameters, best_arm, candidates_values)
 
         #split per i quali la split condition è soddisfatta, poi dovrò scecgliere il miglior candidato
         candidate_split = []
         # lista dei diversi valori di ogni variabile (1 o 2 se binaria)
         # devo scegliere indice della var
-        #TODO verificacre che le 5 linee seguenti facciano quello che dovrebbero fare
         count_var_values = [[] for x in range(self.num_variables)]
-        for t in subspace:
+        for t in self.subspace:
             for var in range(self.num_variables):
                 if t[var] not in count_var_values[var]:
                     count_var_values[var].append(t[var])
-        #fine linee da controllare
 
         # ottengo quanti valori diversi della variabile si occupa il contesto
         # scelgo solo le variabili del contesto con almeno due valori diversi, con 1 o 0
@@ -152,10 +153,9 @@ class Context():
             if var == 0:
                 pass
             else:
-                #TODO: count_var_values[var](qualcosa) da set A TUPLE, dovrebbe essere risolto, se le linee da controllare (app 136-140 sono corrette)
                 candidadate_split.add(split_condition(count_var_values[var][0], candidates_values))
         #restituisco una tupla che ha al primo posto lo spazio delle feature, al secodno il valore della split condition, terzo e quarto i lerner associati
-        return argmax(candidate_split, axis=1)
+        return candidadate_split[argmax([a[1] for a in candidadate_split], axis=1)]
 
 # Context_Manager si occupa della gestione dei context-learner
 # feature_space = [("y", "f"), ("y", "u"),("a", "f"),("a", "u")]
@@ -168,8 +168,8 @@ class Context_Manager():
         # ogni assegnamento dello spazio è gestito da un contesto
         self.features_context = {("y", "f"):0, ("y", "u"):0, ("a", "f"):0, ("a", "u"):0 }
         # ogni contesto ha id, subspace feature e learner. Era un dizionario, inutile?
-        #self.contexts_set = {0:Context(0, feature_space, TS_Learner_candidate(n_arms))}
-        self.contexts_set = {Context(0, feature_space, TS_Learner_candidate(n_arms))}
+        self.contexts_set = {0:Context(0, feature_space, TS_Learner_candidate(n_arms))}
+        #self.contexts_set = {Context(0, feature_space, TS_Learner_candidate(n_arms))}
         # week se diverso da -1 effettua split ogni week (e.g. week=5 il giorno 4 splitta)
         self.week = week
         self.time = 0
@@ -189,20 +189,21 @@ class Context_Manager():
 
     # split alla fine di una week, considera ogni contesto per vedere se effettuare lo split
     def split(self, time, candidates_values):
-        if (time+1)%week == 0:
+        if (time+1)%self.week == 0:
             # TODO: EFFETTUA SPLIT PER OGNI CONTESTO
             for index, context in self.contexts_set.items():
                 split = context.split(candidates_values)
                 #se lo split non restituisce una stringa vuota significa che bisogna effettuarlo
                 if split != []:
                     #viene eliminato il contesto padre e inseriti due nuovi contesti, che sono complementari nello spazio delle feature tra di loro rispetto al padre
-                    number = self.contexts_set.items()
-                    compl_feature = [x in context.feature_space not in split[0]]
+                    number = len(self.contexts_set.items())
+                    compl_feature = [x for x in context.feature_space not in split[0]]
                     #viene aggiunto il primo sub contesto, con un nuovo numero, le sue feature e il suo lerner
-                    contexts_set.add(Context(number, compl_feature, split[3]))
+                    self.contexts_set[number] = Context(number, compl_feature, split[3])
                     #viene aggiunto il secondo sub contesto, con il numero del padre, le sue feature e il suo lerner
-                    context_set.add(Context(index, split[0], split[2]))
-                    context_set.delete(context)
+
+                    self.context_set[index] = Context(index, split[0], split[2])
+
 
         else:
             pass

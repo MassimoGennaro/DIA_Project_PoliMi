@@ -1,6 +1,7 @@
 # Learners
 
 import numpy as np
+import math
 from matplotlib import pyplot
 
 class Learner:
@@ -41,39 +42,40 @@ class TS_Learner(Learner):
         self.beta_parameters[pulled_arm,0] =  self.beta_parameters[pulled_arm,0] + reward
         self.beta_parameters[pulled_arm,1] =  self.beta_parameters[pulled_arm,1] + 1.0 - reward
 
-    def prob_succ_arm(arm):
+    def prob_succ_arm(self, arm):
         arm_successes = self.learner.beta_parameters[arm][0]
         arm_failures = self.learner.beta_parameters[arm][1]
         return arm_successes/(arm_successes + arm_failures)
 
-    def expected_value(arm, candidate_value):
+    def expected_value(self, arm, candidate_value):
     	#calcolo la sua probabilità di successo
         arm_successes = self.learner.beta_parameters[arm][0]
         arm_failures = self.learner.beta_parameters[arm][1]
-        arm_prob_success = prob_succ_arm(arm)
+        arm_prob_success = self.prob_succ_arm(arm)
         # calcolo il suo valore atteso, deve essere usato per la split condition
         expected_value = arm_prob_success * candidate_value
         return expected_value
 
         #Dati i valori dei candidati (prezzi) restituisce il best arm che è dato dal prodotto value*prob_success
-    def best_arm(candidates_values):
-        best_arm = 0
+
+    def best_arm(self, candidates_values):
+        best = 0
         best_value = -100
-              for i in range(self.n_arms):
-                   if expected_value(i, candidates_values[i]) > best_value:
-                       best_arm = i
-                       bast_value = expected_value(i, candidates_values[i])
-        return best_arm
+        for i in range(self.n_arms):
+            if self.expected_value(i, candidates_values[i]) > best_value:
+                best = i
+                bast_value = self.expected_value(i, candidates_values[i])
+        return best
 
-    def best_exp_value(candidates_values):
-        best_arm = best_arm(candidates_values)
-        return expected_value(best_arm)
+    def best_exp_value(self, candidates_values):
+        best_arm = self.best_arm(candidates_values)
+        return self.expected_value(best_arm)
 
-    def best_arm_lower_bound(candidates_values):
-        best_arm = best_arm(candidates_values)
-        exp_value = expected_value(best_arm)
-        succ_arm = prob_succ_arm(best_arm)
-        minus = -pow(-log(succ_arm*(1-succ_arm))/(2*(self.learner.beta_parameters[arm][0]+self.learner.beta_parameters[arm][1])),1/2)
+    def best_arm_lower_bound(self, candidates_values):
+        best_arm = self.best_arm(candidates_values)
+        exp_value = self.expected_value(best_arm)
+        succ_arm = self.prob_succ_arm(best_arm)
+        minus = -pow(-math.log(succ_arm*(1-succ_arm))/(2*(self.learner.beta_parameters[best_arm][0]+self.learner.beta_parameters[best_arm][1])),1/2)
         return exp_value - minus
 ########################################
 
