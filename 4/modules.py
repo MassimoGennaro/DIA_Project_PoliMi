@@ -32,7 +32,7 @@ class Personalized_Environment():
     # rende la reward del candidato in base alla [phase][category][arm]
     def round(self, p_category, pulled_arm):
         # se time è oltre fase attuale, aumento di 1
-        if time > self.phases[self.current_phase][1]:
+        if self.time > self.phases[self.current_phase][1]:
             self.current_phase += 1
         p = self.probabilities[self.current_phase][p_category][pulled_arm]
         reward = np.random.binomial(1,p)
@@ -135,7 +135,7 @@ class Context():
         #best_expected_value = best_expected_value(self.learner.beta_parameters, best_arm, candidates_values)
 
         #split per i quali la split condition è soddisfatta, poi dovrò scecgliere il miglior candidato
-        candidate_split = []
+        candidate_split = [[]]
         # lista dei diversi valori di ogni variabile (1 o 2 se binaria)
         # devo scegliere indice della var
         count_var_values = [[] for x in range(self.num_variables)]
@@ -153,9 +153,9 @@ class Context():
             if var == 0:
                 pass
             else:
-                candidadate_split.add(split_condition(count_var_values[var][0], candidates_values))
+                candidate_split.add(self.split_condition(count_var_values[var][0], candidates_values))
         #restituisco una tupla che ha al primo posto lo spazio delle feature, al secodno il valore della split condition, terzo e quarto i lerner associati
-        return candidadate_split[argmax([a[1] for a in candidadate_split], axis=1)]
+        return candidate_split[np.argmax([a[1] for a in candidate_split], axis=1)]
 
 # Context_Manager si occupa della gestione dei context-learner
 # feature_space = [("y", "f"), ("y", "u"),("a", "f"),("a", "u")]
