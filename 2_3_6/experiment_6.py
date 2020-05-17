@@ -118,7 +118,7 @@ class Experiment:
                 Here we need to multiply each cell of click_estimations for the (estimated) best expected value of each class, this values come from the pricing algorithm
                 and then pass the updated table to knapsack
                 '''
-                expected_values = [2,3,4] # TODO there we will call a function from the pricing part
+                expected_values = [[],[],[]] # TODO there we will call a function from the pricing part, find max as in clairvoyant
                 values = [[expected_values[a]*click_estimations[a][b] for b in range(self.n_arms)] for a in range(len(expected_values))]
                 
                 # Knapsack return a list of pulled_arm

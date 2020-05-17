@@ -27,9 +27,9 @@ prior_categories = [1, 1, 1]
 
 # probabilità delle 3 classi per ogni candidato.
 # deve essere ampliata per considerare le fasi: lista di liste di liste: [phase][category][arm-chance]
-p_categories = np.array([[[0.85, 0.55, 0.50, 0.25, 0.15],
+p_categories = np.array([[[0.85, 0.85, 0.50, 0.25, 0.15],
                           [0.95, 0.90, 0.60, 0.05, 0.00],
-                          [0.90, 0.45, 0.20, 0.15, 0.05]]])
+                          [0.90, 0.85, 0.20, 0.15, 0.05]]])
 
 ###### Dati dei Candidati ######
 # abbiamo 5 candidati di prezzzi diversi
@@ -52,7 +52,9 @@ opt_arm_categories = np.argmax(exp_values_categories, axis=1).T
 ### EXPERIMENT PARAMETERS ###
 
 # T è il numero di persone
-T = 400
+T = 3000
+
+week = -1
 
 # numero di fasi in cui cambiano le probabilità delle categorie
 num_phases = len(p_categories)
@@ -88,7 +90,7 @@ for e in range(n_experiments):
     # utilizziamo un person_manager per gestire la creazione di nuove persone
     p_manager = Person_Manager(categories, p_categories[0], features, T)
     # utilizziamo un context_manager per gestire la gestione dei contesti e learner
-    c_manager = Context_Manager(n_arms, feature_space, arms_candidates)
+    c_manager = Context_Manager(n_arms, feature_space, arms_candidates, week)
     # general gestisce la logica
     general = General(p_manager, c_manager, environment)
 
@@ -128,12 +130,12 @@ else:
     print("average_regret_list lenght: {}".format(len(average_regret_list)))
     print("cumulative average_regret_list lenght: {}\n".format(average_regret_list))
 
-# plt.figure(0)
-# plt.ylabel("Cumulative Regret in t")
-# plt.xlabel("t")
-# plt.plot(average_regret_list, 'r')
-# plt.legend(["TS generico"])
-# plt.show()
+plt.figure(0)
+plt.ylabel("Cumulative Regret in t")
+plt.xlabel("t")
+plt.plot(average_regret_list, 'r')
+plt.legend(["TS generico"])
+plt.show()
 
 #  QUI SI POSSONO OSSERVARE GLI ARMI PIù SCELTI IN TUTTI GLI EXPERIMENT
 

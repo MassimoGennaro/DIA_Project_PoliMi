@@ -36,21 +36,22 @@ class TS_Learner(Learner):
         return idx
 
     # reward = 1  se successo, reward = 0 se fallimento
-    def update(self,pulled_arm,reward):
-        self.t+=1
-        self.update_observations(pulled_arm, reward)
-        self.beta_parameters[pulled_arm,0] =  self.beta_parameters[pulled_arm,0] + reward
-        self.beta_parameters[pulled_arm,1] =  self.beta_parameters[pulled_arm,1] + 1.0 - reward
+    # def update(self,pulled_arm,reward):
+    #     self.t+=1
+    #     self.update_observations(pulled_arm, reward)
+    #     self.beta_parameters[pulled_arm,0] =  self.beta_parameters[pulled_arm,0] + reward
+    #     self.beta_parameters[pulled_arm,1] =  self.beta_parameters[pulled_arm,1] + 1.0 - reward
 
     def prob_succ_arm(self, arm):
-        arm_successes = self.learner.beta_parameters[arm][0]
-        arm_failures = self.learner.beta_parameters[arm][1]
+        arm_successes = self.beta_parameters[arm][0]
+        arm_failures = self.beta_parameters[arm][1]
+        
         return arm_successes/(arm_successes + arm_failures)
 
     def expected_value(self, arm, candidate_value):
     	#calcolo la sua probabilità di successo
-        arm_successes = self.learner.beta_parameters[arm][0]
-        arm_failures = self.learner.beta_parameters[arm][1]
+        arm_successes = self.beta_parameters[arm][0]
+        arm_failures = self.beta_parameters[arm][1]
         arm_prob_success = self.prob_succ_arm(arm)
         # calcolo il suo valore atteso, deve essere usato per la split condition
         expected_value = arm_prob_success * candidate_value
@@ -69,13 +70,16 @@ class TS_Learner(Learner):
 
     def best_exp_value(self, candidates_values):
         best_arm = self.best_arm(candidates_values)
-        return self.expected_value(best_arm)
+        return self.expected_value(best_arm, candidates_values[best_arm])
 
     def best_arm_lower_bound(self, candidates_values):
         best_arm = self.best_arm(candidates_values)
-        exp_value = self.expected_value(best_arm)
+        exp_value = self.expected_value(best_arm, candidates_values[best_arm])
         succ_arm = self.prob_succ_arm(best_arm)
-        minus = -pow(-math.log(succ_arm*(1-succ_arm))/(2*(self.learner.beta_parameters[best_arm][0]+self.learner.beta_parameters[best_arm][1])),1/2)
+        alfa_best_arm = self.beta_parameters[best_arm][0]
+        beta_best_arm = self.beta_parameters[best_arm][1]
+        
+        minus = -pow(-math.log(succ_arm * (1-succ_arm)) / (2 * (alfa_best_arm + beta_best_arm)), 0.5) 
         return exp_value - minus
 ########################################
 
