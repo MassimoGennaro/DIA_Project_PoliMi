@@ -60,7 +60,7 @@ class TS_Learner(Learner):
 
     def best_arm(self, candidates_values):
         best = 0
-        best_value = -100
+        best_value = self.expected_value(0,candidates_values[0]) #this should crash whenever the inputs have size zero
         for i in range(self.n_arms):
             if self.expected_value(i, candidates_values[i]) > best_value:
                 best = i
