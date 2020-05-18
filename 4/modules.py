@@ -158,11 +158,11 @@ class Context():
         splittable_vars = [1 if len(x)>=2 else 0 for x in count_var_values]
 
 
-        for var in splittable_vars:
+        for index, var in enumerate(splittable_vars):
             if var == 0:
                 pass
             else:
-                tmp_split_condition = self.split_condition(count_var_values[var][0], candidates_values)
+                tmp_split_condition = self.split_condition(count_var_values[index][0], candidates_values)
                 if len(tmp_split_condition) > 0:
                     candidate_split.append(tmp_split_condition)
         #restituisco una tupla che ha al primo posto lo spazio delle feature, al secodno il valore della split condition, terzo e quarto i lerner associati

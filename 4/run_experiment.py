@@ -130,12 +130,14 @@ else:
     print("average_regret_list lenght: {}".format(len(average_regret_list)))
     print("cumulative average_regret_list lenght: {}\n".format(average_regret_list))
 
+# Stampa Grafico della Regret
 plt.figure(0)
 plt.ylabel("Cumulative Regret in t")
 plt.xlabel("t")
 plt.plot(average_regret_list, 'r')
 plt.legend(["TS generico"])
 plt.show()
+#plt.savefig(dir_path + "\\Regret Medio")
 
 #  QUI SI POSSONO OSSERVARE GLI ARMI PIù SCELTI IN TUTTI GLI EXPERIMENT
 
