@@ -34,7 +34,7 @@ class Environment:
 
         """self.click_functions = {
             "Young-Familiar": [
-                lambda x: (1 - np.exp(-x)) * 100,
+                lambda x: (1 - np.exp(-x/s)) * m,
                 lambda x: (1 - np.exp(-x)) * 150,
                 lambda x: (1 - np.exp(-x)) * 300
             ],

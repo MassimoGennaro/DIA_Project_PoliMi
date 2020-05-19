@@ -10,7 +10,7 @@ from utils_functions import *
 ###### Dati delle Persone
 
 # considero le categorie sempre come numeri interi
-categories = {0: ("a", "f"), 1: ("y", "f"), 2: ("y", "u")}
+categories = {0: ("y", "f"), 1: ("a", "f"), 2: ("y", "u")}
 
 # le features servono sono per capire a cosa corrispondono i valori
 features = {"Age": ("y", "a"), "Familiarity": ("f", "u")}
@@ -27,9 +27,9 @@ prior_categories = [1, 1, 1]
 
 # probabilità delle 3 classi per ogni candidato.
 # deve essere ampliata per considerare le fasi: lista di liste di liste: [phase][category][arm-chance]
-p_categories = np.array([[[0.85, 0.85, 0.50, 0.25, 0.15],
+p_categories = np.array([[0.85, 0.85, 0.50, 0.25, 0.15],
                           [0.95, 0.90, 0.60, 0.05, 0.00],
-                          [0.90, 0.85, 0.20, 0.15, 0.05]]])
+                          [0.90, 0.85, 0.20, 0.15, 0.05]])
 
 ###### Dati dei Candidati ######
 # abbiamo 5 candidati di prezzzi diversi
@@ -57,10 +57,10 @@ T = 3000
 week = -1
 
 # numero di fasi in cui cambiano le probabilità delle categorie
-num_phases = len(p_categories)
-phases = create_phases(T, num_phases)
+# num_phases = len(p_categories)
+# phases = create_phases(T, num_phases)
 
-print("phases:{}".format(phases))
+# print("phases:{}".format(phases))
 
 # numero di esperimenti
 n_experiments = 10
@@ -85,10 +85,10 @@ for e in range(n_experiments):
     print("experiment: {}".format(e))
     # ad ogni experiment creiamo un nuovo Environment
     # utilizziamo un environment adatto, rende la reward in base a category e candidato
-    environment = Personalized_Environment(arms_candidates, p_categories, phases, T)
+    environment = Personalized_Environment(arms_candidates, p_categories)
 
     # utilizziamo un person_manager per gestire la creazione di nuove persone
-    p_manager = Person_Manager(categories, p_categories[0], features, T)
+    p_manager = Person_Manager(categories, p_categories, features)
     # utilizziamo un context_manager per gestire la gestione dei contesti e learner
     c_manager = Context_Manager(n_arms, feature_space, arms_candidates, week)
     # general gestisce la logica

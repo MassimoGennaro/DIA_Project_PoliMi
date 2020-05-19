@@ -1,6 +1,7 @@
 from environment.CampaignEnvironment import *
 from learners.Subcampaign_Learner import *
 from knapsack.knapsack import *
+from environment.modules import *
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -60,8 +61,8 @@ class Experiment:
         prices = [5, 10, 15, 20, 25]
         
         expected_values = [[a*b for a,b in zip(prices, probabilities_matrix[i])] for i in range(len(probabilities_matrix))]
-        real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
         
+        real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
         
         real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
         opt_super_arm = knapsack_optimizer(real_values)
@@ -74,6 +75,46 @@ class Experiment:
         return opt_super_arm_reward
 
 
+    def create_general(self):
+        
+        ###### Dati delle Persone
+
+        # considero le categorie sempre come numeri interi
+        categories = {0: ("y", "f"), 1: ("a", "f"), 2: ("y", "u")}
+
+        # ogni tupla è in ordine secondo le variabili: (e.g. (prima var, seconda var, ecc))
+        feature_space = [("y", "f"), ("y", "u"), ("a", "f"), ("a", "u")]
+
+        features = {"Age": ("y", "a"), "Familiarity": ("f", "u")}
+
+        # probabilità delle 3 classi per ogni candidato.
+        # deve essere ampliata per considerare le fasi: lista di liste di liste: [phase][category][arm-chance]
+        p_categories = np.array([[0.9, 0.7, 0.3, 0.1, 0.05],
+                                [0.9, 0.7, 0.5, 0.2, 0.1],
+                                [0.8, 0.4, 0.05, 0.01, 0.01]])
+
+        ###### Dati dei Candidati ######
+        # abbiamo 5 candidati di prezzzi diversi
+        n_arms = 5
+        # valori dei candidati
+        arms_candidates = np.array([5, 10, 15, 20, 25])
+        
+        
+        
+        environment = Personalized_Environment(arms_candidates, p_categories)
+        # utilizziamo un person_manager per gestire la creazione di nuove persone
+        p_manager = Person_Manager(categories, p_categories, features)
+        # utilizziamo un context_manager per gestire la gestione dei contesti e learner
+        c_manager = Context_Manager(n_arms, feature_space, arms_candidates)
+        c_manager.add_context(categories[0])
+        c_manager.add_context(categories[1])
+        c_manager.add_context(categories[2])
+        #
+        # general gestisce la logica
+        general = General(p_manager, c_manager, environment)
+        
+        return general
+    
     def run(self, n_experiments=10, horizon=56):
         """
         Experimental Solution
@@ -82,7 +123,10 @@ class Experiment:
         self.gpts_rewards_per_experiment = []
         self.opt_rewards_per_experiment = [self.opt_super_arm_reward] * horizon
 
+        
+        
         for e in range(0, n_experiments):
+            pricing_experiment = self.create_general()
             print("Performing experiment: ", str(e + 1))
 
             # create the environment
@@ -118,8 +162,13 @@ class Experiment:
                 Here we need to multiply each cell of click_estimations for the (estimated) best expected value of each class, this values come from the pricing algorithm
                 and then pass the updated table to knapsack
                 '''
-                expected_values = [[],[],[]] # TODO there we will call a function from the pricing part, find max as in clairvoyant
-                values = [[expected_values[a]*click_estimations[a][b] for b in range(self.n_arms)] for a in range(len(expected_values))]
+                expected_values = pricing_experiment.expected_values # TODO there we will call a function from the pricing part, find max as in clairvoyant
+                
+                #expected_values = expected_values.tolist()
+                best_exp_values = [max(expected_values[i]) for i in range(len(expected_values))]
+                
+                values = [[best_exp_values[a]*click_estimations[a][b] for b in range(self.n_arms)] for a in range(len(expected_values))]
+                
                 
                 # Knapsack return a list of pulled_arm
                 super_arm = knapsack_optimizer(values)
@@ -144,9 +193,20 @@ class Experiment:
                     #super_arm_reward += arm_reward # * expected_value[subc_id]
                 # store the reward for this timestamp
                 
-                super_arm_reward = todo(best_n_clicks) # TODO todo function must instance three experiment, one for each class, find the best expected value (conv_rate * price)
-                                                        # and multiply this with best_n_clicks, finally sum these three products
-                rewards.append(super_arm_reward)
+                
+                pricing_experiment.run_pricing_experiment(best_n_clicks)
+                
+                exp_values = pricing_experiment.expected_values
+
+                best_exp_values = [max(exp_values[i]) for i in range(len(exp_values))]
+                
+                
+
+                
+                super_arm_reward = [(c* e) for c, e in zip(best_n_clicks, best_exp_values)]# TODO todo function must instance three experiment, one for each class, find the best expected value (conv_rate * price)
+                                                                                            # and multiply this with best_n_clicks, finally sum these three products
+                
+                rewards.append(sum(super_arm_reward))
 
             self.gpts_rewards_per_experiment.append(rewards)
 
@@ -159,12 +219,13 @@ class Experiment:
         plt.figure()
         plt.ylabel("Number of Clicks")
         plt.xlabel("t")
-
+        
         opt_exp = self.opt_rewards_per_experiment
-        mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
-
         plt.plot(opt_exp, 'g', label='Optimal Reward')
-        plt.plot(mean_exp, 'b', label='Expected Reward')
+        mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
+        
+        for e in range(len(self.gpts_rewards_per_experiment)):
+            plt.plot(self.gpts_rewards_per_experiment[e], 'b', label='Expected Reward')
 
         plt.legend(loc="upper left")
         plt.show()
