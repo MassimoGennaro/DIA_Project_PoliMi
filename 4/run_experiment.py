@@ -38,7 +38,7 @@ n_arms = 5
 arms_candidates = np.array([5, 10, 15, 20, 25])
 
 # per ogni categoria calcolo il valore atteso di ogni arm
-exp_values_categories = np.multiply(p_categories[0], arms_candidates)
+exp_values_categories = np.multiply(p_categories, arms_candidates)
 
 # per ogni categoria trovo il valore atteso del best arm
 best_exp_value_categories = np.max(exp_values_categories, axis=1).T
@@ -54,7 +54,7 @@ opt_arm_categories = np.argmax(exp_values_categories, axis=1).T
 # T è il numero di persone
 T = 3000
 
-week = -1
+week = int(T/3)
 
 # numero di fasi in cui cambiano le probabilità delle categorie
 # num_phases = len(p_categories)
@@ -73,7 +73,7 @@ print("B = \n", arms_candidates)
 print("A*B = \n", exp_values_categories)
 print("max(A*B, axis=1) = \n", best_exp_value_categories)
 print("argmax(A*B, axis=1) = \n", opt_arm_categories)
-print("Horizon = ", T, "\nphases = \n", phases, "\nn_experiments = \n", n_experiments)
+print("Horizon = ", T, "\nn_experiments = \n", n_experiments)
 
 ###### RUN EXPERIMENTS ######
 
@@ -85,7 +85,7 @@ for e in range(n_experiments):
     print("experiment: {}".format(e))
     # ad ogni experiment creiamo un nuovo Environment
     # utilizziamo un environment adatto, rende la reward in base a category e candidato
-    environment = Personalized_Environment(arms_candidates, p_categories)
+    environment = Personalized_Environment(arms_candidates, p_categories, T)
 
     # utilizziamo un person_manager per gestire la creazione di nuove persone
     p_manager = Person_Manager(categories, p_categories, features)

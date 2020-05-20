@@ -16,24 +16,19 @@ from utils_functions import *
 
 # quando t avanza di tempo, può cambiare fase.
 class Personalized_Environment():
-    def __init__(self, arms_candidates, probabilities, phases, horizon):
+    def __init__(self, arms_candidates, probabilities, horizon):
         # arms_candidates è array dei valori di ogni arm (e.g. [5, 10 ,15, 20 ,25])
         self.arms_candidates = arms_candidates
         # probabilities è un tensore in 3 dimensioni: [phase][category][arm]
         self.probabilities = probabilities
         # lista di intervalli delle fasi: e.g [(1,100), (101,200), (201, 300)]
-        self.phases = phases
         self.horizon = horizon
         self.time = 0
-        # parte dalla prima fase
-        self.current_phase = 0
+        
 
     # rende la reward del candidato in base alla [phase][category][arm]
     def round(self, p_category, pulled_arm):
-        # se time è oltre fase attuale, aumento di 1
-        if self.time > self.phases[self.current_phase][1]:
-            self.current_phase += 1
-        p = self.probabilities[self.current_phase][p_category][pulled_arm]
+        p = self.probabilities[p_category][pulled_arm]
         reward = np.random.binomial(1,p)
         self.time += 1
         return reward * self.arms_candidates[pulled_arm]
@@ -43,11 +38,10 @@ class Personalized_Environment():
 # contiene informazioni sulle persone, categorie e altro.
 
 class Person_Manager():
-    def __init__(self, categories, probabilities, bound_num_persons, features):
+    def __init__(self, categories, probabilities, features):
         self.categories = categories
         self.probabilities = probabilities
         self.features = features
-        self.bound_num_persons = bound_num_persons
 
         self.persons_count = 0
         self.categories_count = [0, 0, 0]
@@ -59,8 +53,7 @@ class Person_Manager():
         self.categories_count[p_category] += 1
         return p_category
 
-    def change_phase(self, probabilities):
-        self.probabilities = probabilities
+    
 
 # ogni contesto si occupa di un sottoinsieme dello spazio delle features
 # se la persona appartiene al suo contesto, se ne occupa il suo learner
