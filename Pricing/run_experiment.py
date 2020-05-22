@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 from learner import *
 from modules import *
@@ -52,9 +54,9 @@ opt_arm_categories = np.argmax(exp_values_categories, axis=1).T
 ### EXPERIMENT PARAMETERS ###
 
 # T è il numero di persone
-T = 3000
+T = 300
 
-week = 50
+week = 100
 
 # numero di fasi in cui cambiano le probabilità delle categorie
 # num_phases = len(p_categories)
@@ -63,7 +65,7 @@ week = 50
 # print("phases:{}".format(phases))
 
 # numero di esperimenti
-n_experiments = 10
+n_experiments = 3
 
 experiments_logs = []
 
@@ -132,15 +134,15 @@ else:
 
 # Stampa Grafico della Regret
 plt.figure(0)
-plt.ylabel("Cumulative Regret in t")
-plt.xlabel("t")
+plt.ylabel("Cumulative Regret ")
+plt.xlabel("t with week = {}".format(week))
 plt.plot(average_regret_list, 'r')
 if week == -1:
     plt.legend(["Regret TS"])
 else:
     plt.legend(["Regret TS with Context Generation"])
 plt.show()
-#plt.savefig(dir_path + "\\Regret Medio")
+#plt.savefig(dir_path + "\\Regret Medio week = {}".format(week))
 
 #  QUI SI POSSONO OSSERVARE GLI ARMI PIù SCELTI IN TUTTI GLI EXPERIMENT
 

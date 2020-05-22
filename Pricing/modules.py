@@ -3,8 +3,10 @@ import numpy as np
 import random
 
 
-from .learner import *
-from .utils_functions import *
+#from .learner import *
+from learner import *
+#from .utils_functions import *
+from utils_functions import *
 
 
 
@@ -227,8 +229,17 @@ class Context_Manager():
                     contexts_set_copy[index] = Context(index, compl_feature_2, split[2])
             
             self.contexts_set = contexts_set_copy
-             
-
+            # TODO: per ogni contesto, controlla il subspace
+            #####
+            # per ogni tupla nel subspace del contesto, aggiorna self.features_context con l'indice del contesto
+            for context in self.contexts_set.values():
+            	for tup in context.subspace:
+            		for key in self.features_context.keys():
+            			if tup == key:
+            				self.features_context[key] = context.context_id
+            ####
+            #print(time+1)
+            #print(self.features_context)
         else:
             pass
 
