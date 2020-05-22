@@ -83,27 +83,6 @@ class Experiment_6:
 
     def create_general(self):
         
-        # ###### Dati delle Persone
-        # # TODO Potrebbero essere incorporate nell'experiment sopra e presi da un config file
-        
-        # # considero le categorie sempre come numeri interi
-        # categories = {0: ("y", "f"), 1: ("a", "f"), 2: ("y", "u")}
-
-        # # ogni tupla è in ordine secondo le variabili: (e.g. (prima var, seconda var, ecc))
-        # feature_space = [("y", "f"), ("a", "f"), ("y", "u"), ("a", "u")]
-
-        # features = {"Age": ("y", "a"), "Familiarity": ("f", "u")}
-
-        # # probabilità delle 3 classi per ogni candidato.
-        # p_categories = np.array(self.probabilities_matrix)
-
-        # ###### Dati dei Candidati ######
-        # # abbiamo 5 candidati di prezzzi diversi
-        # n_arms = len(self.prices)
-        # # valori dei candidati
-        # arms_candidates = np.array(self.prices)
-        
-        
         # Crea un pricing environment
         environment = Personalized_Environment(self.arms_candidates, self.p_categories)
         # utilizziamo un person_manager per gestire la creazione delle persone
@@ -179,7 +158,7 @@ class Experiment_6:
                 Here we need to multiply each cell of click_estimations for the (estimated) best expected value of each class, this values come from the pricing algorithm
                 and then pass the updated table to knapsack
                 '''
-                expected_values = pricing_experiment.expected_values 
+                expected_values = pricing_experiment.expected_values #[3 x 5]
                 
                 
                 best_exp_values = [max(expected_values[i]) for i in range(len(expected_values))]
@@ -209,6 +188,7 @@ class Experiment_6:
                 pricing_experiment.run_pricing_experiment(best_n_clicks)
                 
                 exp_values = pricing_experiment.expected_values
+                
                 best_exp_values = [max(exp_values[i]) for i in range(len(exp_values))]
                 
                 # store the reward for this timestamp
