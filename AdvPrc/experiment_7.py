@@ -68,14 +68,34 @@ class Experiment_7:
           
         expected_values = [[a*b for a,b in zip(self.arms_candidates, self.p_categories[i])] for i in range(len(self.p_categories))]
         
-        real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
+        expected_values = np.array(expected_values)
+        sel_exp_values = [expected_values[: , i] for i in range(len(expected_values[0]))] # take each column and put as a list inside sel_exp_values
+                
+                
+        values = []
+        for i in range(len(sel_exp_values)):
+            values.append(sel_exp_values[i].reshape(3,1) * real_click_values) # Multiply each columns for the click_estimations table, creating 5 (num of prices) tables
+                
+                
+        super_arm_candidates = []
+        best_knapsack_values = []
+        for t in values:
+            super_arm_candidates.append(knapsack_optimizer(t))
+            best_knapsack_values.append(get_knapsack_values(t, knapsack_optimizer(t)))
+                
+                
+        idx = np.argmax(np.sum(best_knapsack_values, axis=1))
+        opt_super_arm = super_arm_candidates[idx]
         
-        real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
-        opt_super_arm = knapsack_optimizer(real_values)
+        
+        # real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
+        
+        # real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
+        # opt_super_arm = knapsack_optimizer(real_values)
 
         opt_super_arm_reward = 0
         for (subc_id, pulled_arm) in enumerate(opt_super_arm):
-            reward = opt_env.subcampaigns[subc_id].round(pulled_arm) * real_expected_values[subc_id]
+            reward = opt_env.subcampaigns[subc_id].round(pulled_arm) * sel_exp_values[idx][subc_id]
             opt_super_arm_reward += reward
 
         return opt_super_arm_reward
@@ -161,13 +181,30 @@ class Experiment_7:
                 expected_values = pricing_experiment.expected_values #[3 x 5]
                 
                 
-                best_exp_values = [max(expected_values[i]) for i in range(len(expected_values))]
                 
-                values = [[best_exp_values[a]*click_estimations[a][b] for b in range(self.n_arms)] for a in range(len(expected_values))]
+                expected_values = np.array(expected_values)
+                sel_exp_values = [expected_values[: , i] for i in range(len(expected_values[0]))] # take each column and put as a list inside sel_exp_values
+                
+                
+                values = []
+                for i in range(len(sel_exp_values)):
+                    values.append(sel_exp_values[i].reshape(3,1) * click_estimations) # Multiply each columns for the click_estimations table, creating 5 (num of prices) tables
+                
+                
+                super_arm_candidates = []
+                best_knapsack_values = []
+                for t in values:
+                    super_arm_candidates.append(knapsack_optimizer(t))
+                    best_knapsack_values.append(get_knapsack_values(t, knapsack_optimizer(t)))
+                
+                
+                idx = np.argmax(np.sum(best_knapsack_values, axis=1))
+                super_arm = super_arm_candidates[idx]
+                #print(super_arm,idx)
                 
                 
                 # Knapsack return a list of pulled_arm
-                super_arm = knapsack_optimizer(values)
+                
                
                 '''
                 We need to extract the original number of click corresponding to the selected budget of a given class and give them to the pricing algorithm

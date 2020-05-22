@@ -76,3 +76,9 @@ def knapsack_optimizer(table):
 
     # return list(enumerate(assignments))
     return assignments
+
+def get_knapsack_values(table, assignments):
+    values = []
+    for row in range(len(assignments)):
+        values.append(table[row][assignments[row]])
+    return values
