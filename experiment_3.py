@@ -1,7 +1,7 @@
-from .advertising.environment.CampaignEnvironment import *
-from .advertising.learners.NS_Subcampaign_Learner import NS_Subcampaign_Learner
-from .advertising.learners.Subcampaign_Learner import Subcampaign_Learner
-from .advertising.knapsack.knapsack import *
+from Advertising.environment.CampaignEnvironment import *
+from Advertising.learners.NS_Subcampaign_Learner import NS_Subcampaign_Learner
+from Advertising.learners.Subcampaign_Learner import Subcampaign_Learner
+from Advertising.knapsack.knapsack import *
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -106,7 +106,7 @@ class Experiment_3:
                 env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
                 
                 if self.estimate_hyperparam == True:
-                    clicks = env.subcampaigns[subc_id].round_all(phase = 0)
+                    clicks = env.subcampaigns[subc_id].round_all(phase=None) #Phase = None -> aggregates the phases of the click_function
                     samples = [self.budgets, clicks]
                     
                     learner = Subcampaign_Learner(arms=self.budgets, label=feature_label)

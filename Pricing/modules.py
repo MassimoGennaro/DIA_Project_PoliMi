@@ -3,10 +3,9 @@ import numpy as np
 import random
 
 
-#from .learner import *
-from learner import *
-#from .utils_functions import *
-from utils_functions import *
+from .learner import *
+from .utils_functions import *
+
 
 
 
@@ -18,17 +17,13 @@ from utils_functions import *
 
 # quando t avanza di tempo, può cambiare fase.
 class Personalized_Environment():
-    def __init__(self, arms_candidates, probabilities, horizon):
+    def __init__(self, arms_candidates, probabilities):
         # arms_candidates è array dei valori di ogni arm (e.g. [5, 10 ,15, 20 ,25])
         self.arms_candidates = arms_candidates
         # probabilities è un tensore in 3 dimensioni: [phase][category][arm]
         self.probabilities = probabilities
-        # lista di intervalli delle fasi: e.g [(1,100), (101,200), (201, 300)]
-        #self.phases = phases
-        self.horizon = horizon
         self.time = 0
-        # parte dalla prima fase
-        #self.current_phase = 0
+        
 
     # rende la reward del candidato in base alla [phase][category][arm]
     def round(self, p_category, pulled_arm):
@@ -176,18 +171,31 @@ class Context():
 # feature_space = [("y", "f"), ("y", "u"),("a", "f"),("a", "u")]
 # TODO: si deve usare le week per decidere quando splittare
 class Context_Manager():
-    def __init__(self, n_arms, feature_space, candidates, week = -1):
+    def __init__(self, n_arms, feature_space, categories, candidates, week = -1, contexts_known = False):
         # feature space è lista di tuple di dimensione pari al numero di variabili
         # feature space è l'unione di tutti i possibili contesti
+        self.n_arms = n_arms
         self.feature_space = feature_space
         # ogni assegnamento dello spazio è gestito da un contesto
-        self.features_context = {("y", "f"):0, ("y", "u"):0, ("a", "f"):0, ("a", "u"):0 }
-        # ogni contesto ha id, subspace feature e learner. Era un dizionario, inutile?
-        self.contexts_set = {0:Context(0, feature_space, TS_Learner_candidate(n_arms))}
-        #self.contexts_set = {Context(0, feature_space, TS_Learner_candidate(n_arms))}
+        if contexts_known == True:
+            self.features_context = {categories[i]:i for i in range(len(categories))}
+            #{("y", "f"):0, ("a", "f"):1,  ("y", "u"):2}
+            self.contexts_set = {}
+        else:
+            self.features_context = {self.feature_space[i]:0 for i in range(len(feature_space))}
+            #{("y", "f"):0, ("y", "u"):0, ("a", "f"):0, ("a", "u"):0 }
+            self.contexts_set = {0:Context(0, feature_space, TS_Learner_candidate(n_arms))}
+        
         # week se diverso da -1 effettua split ogni week (e.g. week=5 il giorno 4 splitta)
         self.week = week
         self.time = 0
+        
+    
+    def add_context(self, subspace):
+        new_id = len(self.contexts_set)
+        self.contexts_set[new_id] = Context(new_id, subspace, TS_Learner_candidate(self.n_arms))
+        for t in subspace:
+            self.features_context[t] = new_id
 
     def select_arm(self, person_category, time, candidates_values):
         self.split(time, candidates_values)
@@ -253,7 +261,8 @@ class General():
         self.context_manager = c_manager
         self.environment = environment
         self.rewards_log = []
-
+        self.candidates_values = self.environment.arms_candidates
+        self.expected_values = [[c*0.5 for c in self.candidates_values] for cat in range(3)]
 
     # general effettua una simulazione, restituisce rewards_log
     def play_experiment(self, num_persons):
@@ -275,3 +284,18 @@ class General():
             self.rewards_log.append([category_person, pulled_arm, reward_person])
 
         return self.rewards_log
+
+    def run_pricing_experiment(self, n_categories_clicks):
+        for index, clicks in enumerate(n_categories_clicks):
+            features_person = self.person_manager.categories[index]
+            
+            for n in range(int(round(clicks))):
+                pulled_arm = self.context_manager.select_arm(features_person, n, self.candidates_values)
+                reward_person = self.environment.round(index, pulled_arm)
+                self.context_manager.update_context(features_person, pulled_arm, reward_person)
+                self.rewards_log.append([index, pulled_arm, reward_person])
+            
+            idx = self.context_manager.features_context[features_person]
+            
+            for c in range(len(self.candidates_values)):
+                self.expected_values[idx][c] = self.context_manager.contexts_set[idx].learner.expected_value(c, self.candidates_values[c])

@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from .learner import *
-from .modules import *
-from .utils_functions import *
+from Pricing.learner import *
+from Pricing.modules import *
+#from .utils_functions import *
 
 class Experiment_4_5:
     def __init__(self, arms_candidates, id):
@@ -48,11 +48,11 @@ class Experiment_4_5:
             # ad ogni experiment creiamo un nuovo Environment
             
             # utilizziamo un environment adatto, rende la reward in base a category e candidato
-            environment = Personalized_Environment(self.arms_candidates, self.p_categories, horizon)
+            environment = Personalized_Environment(self.arms_candidates, self.p_categories)
             # utilizziamo un person_manager per gestire la creazione di nuove persone
             p_manager = Person_Manager(self.categories, self.p_categories, self.features)
             # utilizziamo un context_manager per gestire la gestione dei contesti e learner
-            c_manager = Context_Manager(self.n_arms, self.features_space, self.arms_candidates, week)
+            c_manager = Context_Manager(self.n_arms, self.features_space, self.categories, self.arms_candidates, week)
             # general gestisce la logica
             general = General(p_manager, c_manager, environment)
 

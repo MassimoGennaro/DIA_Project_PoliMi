@@ -1,6 +1,6 @@
-from .advertising.environment.CampaignEnvironment import *
-from .advertising.learners.Subcampaign_Learner import *
-from .advertising.knapsack.knapsack import *
+from Advertising.environment.CampaignEnvironment import *
+from Advertising.learners.Subcampaign_Learner import *
+from Advertising.knapsack.knapsack import *
 import numpy as np
 import matplotlib.pyplot as plt
 

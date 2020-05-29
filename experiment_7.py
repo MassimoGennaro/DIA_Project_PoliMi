@@ -1,19 +1,21 @@
-from .advertising.environment.CampaignEnvironment import *
-from .advertising.learners.Subcampaign_Learner import *
-from .advertising.knapsack.knapsack import *
-from .pricing.modules import *
+from Advertising.environment.CampaignEnvironment import *
+from Advertising.learners.Subcampaign_Learner import *
+from Advertising.knapsack.knapsack import *
+from Pricing.modules import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-class Experiment_6:
-    def __init__(self, max_budget=5.0, n_arms=6, prices = [5, 10, 15, 20, 25] , env_id = 0):
+class Experiment_7:
+    def __init__(self, max_budget=5.0, n_arms=6, prices = [5, 10, 15, 20, 25] , pricing_env_id = 0, advertising_env_id = 0):
+        ## ADVERTISING ##
+        
         # Budget settings
         self.max_budget = max_budget
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        env = Environment(env_id)
+        env = Environment(advertising_env_id)
 
         # Phase settings
         self.phase_labels = env.phase_labels
@@ -25,10 +27,17 @@ class Experiment_6:
         # Click functions
         self.click_functions = env.click_functions
         
+        # Experiment settings
+        self.sigma = env.sigma
+        
+        ################
+        
+        ## PRICING ##
+        
         # Conversion rates
-        with open('AdvPrc/pricing/configs/pricing_env.json') as json_file:
+        with open('Pricing/configs/pricing_env.json') as json_file:
             data = json.load(json_file)
-        campaign = data["campaigns"][env_id]
+        campaign = data["campaigns"][pricing_env_id]
         
         
         categories = {i:tuple(campaign["categories"][i]) for i in range(len(campaign["categories"]))}
@@ -39,12 +48,11 @@ class Experiment_6:
         self.p_categories = np.array(campaign["p_categories"])
         self.arms_candidates = np.array(prices)
         self.n_arms_price = len(self.arms_candidates)
-        
+        ################
         
 
-        # Experiment settings
-        self.sigma = env.sigma
-
+        
+        ## Clairvoyant optimal reward ##
         self.opt_super_arm_reward = self.run_clairvoyant()
 
         ## Rewards for each experiment (each element is a list of T rewards)
@@ -68,14 +76,34 @@ class Experiment_6:
           
         expected_values = [[a*b for a,b in zip(self.arms_candidates, self.p_categories[i])] for i in range(len(self.p_categories))]
         
-        real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
+        expected_values = np.array(expected_values)
+        sel_exp_values = [expected_values[: , i] for i in range(len(expected_values[0]))] # take each column and put as a list inside sel_exp_values
+                
+                
+        values = []
+        for i in range(len(sel_exp_values)):
+            values.append(sel_exp_values[i].reshape(3,1) * real_click_values) # Multiply each columns for the click_estimations table, creating 5 (num of prices) tables
+                
+                
+        super_arm_candidates = []
+        best_knapsack_values = []
+        for t in values:
+            super_arm_candidates.append(knapsack_optimizer(t))
+            best_knapsack_values.append(get_knapsack_values(t, knapsack_optimizer(t)))
+                
+                
+        idx = np.argmax(np.sum(best_knapsack_values, axis=1))
+        opt_super_arm = super_arm_candidates[idx]
         
-        real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
-        opt_super_arm = knapsack_optimizer(real_values)
+        
+        # real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
+        
+        # real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
+        # opt_super_arm = knapsack_optimizer(real_values)
 
         opt_super_arm_reward = 0
         for (subc_id, pulled_arm) in enumerate(opt_super_arm):
-            reward = opt_env.subcampaigns[subc_id].round(pulled_arm) * real_expected_values[subc_id]
+            reward = opt_env.subcampaigns[subc_id].round(pulled_arm) * sel_exp_values[idx][subc_id]
             opt_super_arm_reward += reward
 
         return opt_super_arm_reward
@@ -88,7 +116,7 @@ class Experiment_6:
         # utilizziamo un person_manager per gestire la creazione delle persone
         p_manager = Person_Manager(self.categories, self.p_categories, self.features)
         # utilizziamo un context_manager per gestire la gestione dei contesti e learner
-        c_manager = Context_Manager(self.n_arms_price, self.features_space, self.arms_candidates)
+        c_manager = Context_Manager(self.n_arms_price, self.features_space,self.categories, self.arms_candidates, contexts_known=True)
         
         # c_manager.add_context() crea un contesto della categoria passata
         for i in range(len(self.categories)):
@@ -161,13 +189,30 @@ class Experiment_6:
                 expected_values = pricing_experiment.expected_values #[3 x 5]
                 
                 
-                best_exp_values = [max(expected_values[i]) for i in range(len(expected_values))]
                 
-                values = [[best_exp_values[a]*click_estimations[a][b] for b in range(self.n_arms)] for a in range(len(expected_values))]
+                expected_values = np.array(expected_values)
+                sel_exp_values = [expected_values[: , i] for i in range(len(expected_values[0]))] # take each column and put as a list inside sel_exp_values
+                
+                
+                values = []
+                for i in range(len(sel_exp_values)):
+                    values.append(sel_exp_values[i].reshape(3,1) * click_estimations) # Multiply each columns for the click_estimations table, creating 5 (num of prices) tables
+                
+                
+                super_arm_candidates = []
+                best_knapsack_values = []
+                for t in values:
+                    super_arm_candidates.append(knapsack_optimizer(t))
+                    best_knapsack_values.append(get_knapsack_values(t, knapsack_optimizer(t)))
+                
+                
+                idx = np.argmax(np.sum(best_knapsack_values, axis=1))
+                super_arm = super_arm_candidates[idx]
+                #print(super_arm,idx)
                 
                 
                 # Knapsack return a list of pulled_arm
-                super_arm = knapsack_optimizer(values)
+                
                
                 '''
                 We need to extract the original number of click corresponding to the selected budget of a given class and give them to the pricing algorithm

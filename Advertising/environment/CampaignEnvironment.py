@@ -5,7 +5,7 @@ import numpy as np
 class Environment:
     def __init__(self, id):
         self.id = id
-        with open('AdvPrc/advertising/configs/sub_camp_config.json') as json_file:
+        with open('Advertising/configs/sub_camp_config.json') as json_file:
             data = json.load(json_file)
         campaign = data["campaigns"][id]
 
