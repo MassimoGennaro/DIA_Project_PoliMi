@@ -23,11 +23,11 @@ class Personalized_Environment():
         # probabilities è un tensore in 3 dimensioni: [phase][category][arm]
         self.probabilities = probabilities
         self.time = 0
-        
+
 
     # rende la reward del candidato in base alla [phase][category][arm]
     def round(self, p_category, pulled_arm):
-        
+
         p = self.probabilities[p_category][pulled_arm]
         reward = np.random.binomial(1,p)
         self.time += 1
@@ -40,16 +40,17 @@ class Personalized_Environment():
 class Person_Manager():
     def __init__(self, categories, probabilities,features):
         self.categories = categories
+        self.n_categories = len(self.categories)
         self.probabilities = probabilities
         self.features = features
         # self.bound_num_persons = bound_num_persons
 
         self.persons_count = 0
-        self.categories_count = [0, 0, 0]
+        self.categories_count = [0]*self.n_categories
         # restituisce la categoria di una nuova persona, ogni persona è identificata completamente dalla categoria.
 
     def new_person(self):
-        p_category = random.randint(0,2)
+        p_category = random.randint(0, self.n_categories-1) # [0,1,2]
         self.persons_count += 1
         self.categories_count[p_category] += 1
         return p_category
@@ -88,7 +89,7 @@ class Context():
                 new_log.append(self.rewards_log[i])
         return new_log
 
-#dato un log calgola il learner derivante da quel log
+#dato un log calcola il learner derivante da quel log
     def learner_sub_context(self, log, candidates_values):
         new_learner = TS_Learner_candidate(self.learner.n_arms)
         for i in range(len(log)):
@@ -103,7 +104,7 @@ class Context():
         if len(self.rewards_log) > 0:
             prob_1 = len(sub_1)/len(self.rewards_log)
             prob_2 = len(sub_2)/len(self.rewards_log)
-        else: 
+        else:
             prob_1 = 0
             prob_2 = 0
         ###################
@@ -120,7 +121,7 @@ class Context():
         val_after_split = self.val_after_split(feature, candidates_values)
         if val_after_split[0] > self.learner.best_arm_lower_bound(candidates_values):
             ris = [feature, val_after_split[0], val_after_split[1], val_after_split[2]]
-            
+
         return ris
 
 
@@ -141,12 +142,12 @@ class Context():
         # devo scegliere indice della var
         count_var_values = [[] for x in range(self.num_variables)]
         for t in self.subspace:
-            
+
             for var in range(self.num_variables):
-                
+
                 if t[var] not in count_var_values[var]:
                     count_var_values[var].append(t[var])
-                    
+
 
         # ottengo quanti valori diversi della variabile si occupa il contesto
         # scelgo solo le variabili del contesto con almeno due valori diversi, con 1 o 0
@@ -161,7 +162,7 @@ class Context():
                 if len(tmp_split_condition) > 0:
                     candidate_split.append(tmp_split_condition)
         #restituisco una tupla che ha al primo posto lo spazio delle feature, al secodno il valore della split condition, terzo e quarto i lerner associati
-        
+
         if len(candidate_split) > 0:
             return candidate_split[np.argmax([a[1] for a in candidate_split])]
         else:
@@ -185,12 +186,12 @@ class Context_Manager():
             self.features_context = {self.feature_space[i]:0 for i in range(len(feature_space))}
             #{("y", "f"):0, ("y", "u"):0, ("a", "f"):0, ("a", "u"):0 }
             self.contexts_set = {0:Context(0, feature_space, TS_Learner_candidate(n_arms))}
-        
+
         # week se diverso da -1 effettua split ogni week (e.g. week=5 il giorno 4 splitta)
         self.week = week
         self.time = 0
-        
-    
+
+
     def add_context(self, subspace):
         new_id = len(self.contexts_set)
         self.contexts_set[new_id] = Context(new_id, subspace, TS_Learner_candidate(self.n_arms))
@@ -214,37 +215,37 @@ class Context_Manager():
     def split(self, time, candidates_values):
         if (self.week != -1) and ((time+1)%self.week == 0):
             # TODO: EFFETTUA SPLIT PER OGNI CONTESTO
-            
+
             contexts_set_copy = self.contexts_set.copy()
-            
+
             for index, context in self.contexts_set.items():
                 split = context.split(candidates_values)
-                
+
                 #se lo split non restituisce una stringa vuota significa che bisogna effettuarlo
                 if split != []:
                     #viene eliminato il contesto padre e inseriti due nuovi contesti, che sono complementari nello spazio delle feature tra di loro rispetto al padre
                     number = len(contexts_set_copy.items())
-                    
+
                     compl_feature_1 = [x for x in context.subspace if split[0] not in x]
                     compl_feature_2 = [x for x in context.subspace if split[0] in x]
-                    
-                    
-                    
+
+
+
                     #viene aggiunto il primo sub contesto, con un nuovo numero, le sue feature e il suo lerner
                     contexts_set_copy[number] = Context(number, compl_feature_1, split[3])
-                    
+
                     #viene aggiunto il secondo sub contesto, con il numero del padre, le sue feature e il suo lerner
                     contexts_set_copy[index] = Context(index, compl_feature_2, split[2])
-            
+
             self.contexts_set = contexts_set_copy
             # TODO: per ogni contesto, controlla il subspace
             #####
             # per ogni tupla nel subspace del contesto, aggiorna self.features_context con l'indice del contesto
             for context in self.contexts_set.values():
-            	for tup in context.subspace:
-            		for key in self.features_context.keys():
-            			if tup == key:
-            				self.features_context[key] = context.context_id
+                for tup in context.subspace:
+                    for key in self.features_context.keys():
+                        if tup == key:
+                            self.features_context[key] = context.context_id
             ####
             #print(time+1)
             #print(self.features_context)
@@ -288,14 +289,14 @@ class General():
     def run_pricing_experiment(self, n_categories_clicks):
         for index, clicks in enumerate(n_categories_clicks):
             features_person = self.person_manager.categories[index]
-            
+
             for n in range(int(round(clicks))):
                 pulled_arm = self.context_manager.select_arm(features_person, n, self.candidates_values)
                 reward_person = self.environment.round(index, pulled_arm)
                 self.context_manager.update_context(features_person, pulled_arm, reward_person)
                 self.rewards_log.append([index, pulled_arm, reward_person])
-            
+
             idx = self.context_manager.features_context[features_person]
-            
+
             for c in range(len(self.candidates_values)):
                 self.expected_values[idx][c] = self.context_manager.contexts_set[idx].learner.expected_value(c, self.candidates_values[c])

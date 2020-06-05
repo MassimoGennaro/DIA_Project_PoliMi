@@ -1,13 +1,15 @@
+from Advertising.environment.Advertising_Config_Manager import *
 from Advertising.environment.CampaignEnvironment import *
 from Advertising.learners.Subcampaign_Learner import *
 from Advertising.knapsack.knapsack import *
 from Pricing.modules import *
+from Pricing.Pricing_Config_Manager import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class Experiment_7:
-    def __init__(self, max_budget=5.0, n_arms=6, prices = [5, 10, 15, 20, 25] , pricing_env_id = 0, advertising_env_id = 0):
+    def __init__(self, max_budget=5.0, n_arms=6, pricing_env_id = 0, advertising_env_id = 0):
         ## ADVERTISING ##
         
         # Budget settings
@@ -15,38 +17,32 @@ class Experiment_7:
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        env = Environment(advertising_env_id)
+        adv_env = Advertising_Config_Manager(advertising_env_id)
 
         # Phase settings
-        self.phase_labels = env.phase_labels
-        self.phase_weights = env.get_phase_weights()
+        self.phase_labels = adv_env.phase_labels
+        self.phase_weights = adv_env.get_phase_weights()
 
         # Class settings
-        self.feature_labels = env.feature_labels
+        self.feature_labels = adv_env.feature_labels
 
         # Click functions
-        self.click_functions = env.click_functions
-        
+        self.click_functions = adv_env.click_functions
+
         # Experiment settings
-        self.sigma = env.sigma
+        self.sigma = adv_env.sigma
         
         ################
         
         ## PRICING ##
         
         # Conversion rates
-        with open('Pricing/configs/pricing_env.json') as json_file:
-            data = json.load(json_file)
-        campaign = data["campaigns"][pricing_env_id]
-        
-        
-        categories = {i:tuple(campaign["categories"][i]) for i in range(len(campaign["categories"]))}
-        self.categories = categories
-        self.features = campaign["features"]
-        features_space = [tuple(campaign["features_space"][i]) for i in range(len(campaign["features_space"]))]
-        self.features_space = features_space
-        self.p_categories = np.array(campaign["p_categories"])
-        self.arms_candidates = np.array(prices)
+        pri_env = Pricing_Config_Manager(pricing_env_id)
+        self.categories = pri_env.get_indexed_categories()
+        self.features = pri_env.features
+        self.features_space = pri_env.feature_space
+        self.p_categories = np.array(pri_env.probabilities)
+        self.arms_candidates = np.array(pri_env.prices)
         self.n_arms_price = len(self.arms_candidates)
         ################
         

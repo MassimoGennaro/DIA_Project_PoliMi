@@ -4,23 +4,18 @@ import json
 
 from Pricing.learner import *
 from Pricing.modules import *
+from Pricing.Pricing_Config_Manager import *
 #from .utils_functions import *
 
 class Experiment_4_5:
-    def __init__(self, arms_candidates, id):
-        
-        with open('Pricing/configs/pricing_env.json') as json_file:
-            data = json.load(json_file)
-        campaign = data["campaigns"][id]
-        
-        
-        categories = {i:tuple(campaign["categories"][i]) for i in range(len(campaign["categories"]))}
-        self.categories = categories
-        self.features = campaign["features"]
-        feature_space = [tuple(campaign["features_space"][i]) for i in range(len(campaign["features_space"]))]
-        self.features_space = feature_space
-        self.p_categories = np.array(campaign["p_categories"])
-        self.arms_candidates = np.array(arms_candidates)
+    def __init__(self, id):
+
+        pri_env = Pricing_Config_Manager(id)
+        self.categories = pri_env.get_indexed_categories()
+        self.features = pri_env.features
+        self.features_space = pri_env.feature_space
+        self.p_categories = np.array(pri_env.probabilities)
+        self.arms_candidates = np.array(pri_env.prices)
         self.n_arms = len(self.arms_candidates)
         
         self.experiments_logs = []

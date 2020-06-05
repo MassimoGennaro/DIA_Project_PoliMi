@@ -1,3 +1,4 @@
+from Advertising.environment.Advertising_Config_Manager import *
 from Advertising.environment.CampaignEnvironment import *
 from Advertising.learners.NS_Subcampaign_Learner import NS_Subcampaign_Learner
 from Advertising.learners.Subcampaign_Learner import Subcampaign_Learner
@@ -20,7 +21,7 @@ class Experiment_3:
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        env = Environment(env_id)
+        env = Advertising_Config_Manager(env_id)
 
         # Phase settings
         self.phase_labels = env.phase_labels

@@ -1,4 +1,5 @@
 from Advertising.environment.CampaignEnvironment import *
+from Advertising.environment.Advertising_Config_Manager import *
 from Advertising.learners.Subcampaign_Learner import *
 from Advertising.knapsack.knapsack import *
 import numpy as np
@@ -11,7 +12,7 @@ class Experiment_2:
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        env = Environment(env_id)
+        env = Advertising_Config_Manager(env_id)
         self.real_values = None
 
         # Phase settings
@@ -177,14 +178,14 @@ class Experiment_2:
             real_values = self.real_values[i]
             title = subc_learner.label
 
-            plt.plot(x_pred, real_values, 'r:', label=r'$n(x)$')
+            plt.plot(x_pred, real_values, 'r:', label=r'$click function$')
             plt.plot(X.ravel(), Y, 'ro', label=u'Observed Clicks')
             plt.plot(x_pred, y_pred, 'b-', label=u'Predicted Clicks')
             plt.fill(np.concatenate([x_pred, x_pred[::-1]]),
                      np.concatenate([y_pred - 1.96 * sigma, (y_pred + 1.96 * sigma)[::-1]]),
                      alpha=.5, fc='b', ec='None', label='95% conf interval')
             plt.title(title)
-            plt.xlabel('$x$')
-            plt.ylabel('$n(x)$')
+            plt.xlabel('$budget$')
+            plt.ylabel('$daily clicks$')
             plt.legend(loc='lower right')
             plt.show()
