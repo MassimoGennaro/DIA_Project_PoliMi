@@ -92,7 +92,7 @@ class Experiment_3:
         self.SWgpts_rewards_per_experiment = []
         self.gpts_rewards_per_experiment = []
         for e in range(0, n_experiments):
-            print("Performing experiment: ", str(e + 1))
+            #print("Performing experiment: ", str(e + 1))
 
             # Create the environment
             env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights, sigma=self.sigma)
