@@ -135,6 +135,7 @@ class Experiment_2:
 
         self.ran = True
 
+
     def plot_experiment(self):
         if not self.ran:
             return "Run the experiment before plotting!"
@@ -149,7 +150,7 @@ class Experiment_2:
         plt.plot(opt_exp, 'g', label='Optimal Reward')
         plt.plot(mean_exp, 'b', label='Expected Reward')
 
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()
 
     def plot_regret(self):
