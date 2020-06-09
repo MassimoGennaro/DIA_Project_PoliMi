@@ -49,7 +49,7 @@ class Experiment_7:
 
         
         ## Clairvoyant optimal reward ##
-        self.opt_super_arm_reward = self.run_clairvoyant_alt()
+        self.opt_super_arm_reward = self.run_clairvoyant()
 
         ## Rewards for each experiment (each element is a list of T rewards)
         self.opt_rewards_per_experiment = []
@@ -248,12 +248,16 @@ class Experiment_7:
                 
                 pricing_experiment.run_pricing_experiment(best_n_clicks)
                 
-                exp_values = pricing_experiment.expected_values
+                real_exp_values = pricing_experiment.expected_values
+                real_exp_values = np.array(real_exp_values)
                 
-                best_exp_values = [max(exp_values[i]) for i in range(len(exp_values))]
+                sel_real_exp_values = [real_exp_values[: , i] for i in range(len(real_exp_values[0]))]
+                
+                sub_optimal_exp_values = sel_real_exp_values[idx] ## idx was extracted before and this is the choice of the unique price for all the classes of users in this time stamp
                 
                 # store the reward for this timestamp
-                super_arm_reward = [(c * e) for c, e in zip(best_n_clicks, best_exp_values)]
+                super_arm_reward = [(c * e) for c, e in zip(best_n_clicks, sub_optimal_exp_values)]
+                
                 rewards.append(sum(super_arm_reward))
 
             self.gpts_rewards_per_experiment.append(rewards)
