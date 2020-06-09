@@ -49,7 +49,7 @@ class Experiment_7:
 
         
         ## Clairvoyant optimal reward ##
-        self.opt_super_arm_reward = self.run_clairvoyant()
+        self.opt_super_arm_reward = self.run_clairvoyant_alt()
 
         ## Rewards for each experiment (each element is a list of T rewards)
         self.opt_rewards_per_experiment = []
@@ -57,7 +57,27 @@ class Experiment_7:
 
         self.ran = False
 
+    def run_clairvoyant_alt(self):
+        opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)
+        for feature_label in self.feature_labels:
+            opt_env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
 
+        real_click_values = opt_env.round_all()
+          
+        expected_values = [[a*b for a,b in zip(self.arms_candidates, self.p_categories[i])] for i in range(len(self.p_categories))]
+        
+        real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
+        
+        real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
+        opt_super_arm = knapsack_optimizer(real_values)
+
+        opt_super_arm_reward = 0
+        for (subc_id, pulled_arm) in enumerate(opt_super_arm):
+            reward = opt_env.subcampaigns[subc_id].round(pulled_arm) * real_expected_values[subc_id]
+            opt_super_arm_reward += reward
+
+        return opt_super_arm_reward
+    
     def run_clairvoyant(self):
         """
         Clairvoyant Solution
@@ -255,7 +275,7 @@ class Experiment_7:
         # for e in range(len(self.gpts_rewards_per_experiment)):
         #     plt.plot(self.gpts_rewards_per_experiment[e], 'b', label='Expected Reward')
 
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()
 
     def plot_regret(self):
@@ -270,5 +290,5 @@ class Experiment_7:
         regret = np.cumsum(self.opt_super_arm_reward - mean_exp)
 
         plt.plot(regret, 'r', label='Regret')
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()

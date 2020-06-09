@@ -216,7 +216,7 @@ class Experiment_6:
         # for e in range(len(self.gpts_rewards_per_experiment)):
         #     plt.plot(self.gpts_rewards_per_experiment[e], 'b', label='Expected Reward')
 
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()
 
     def plot_regret(self):
@@ -231,5 +231,5 @@ class Experiment_6:
         regret = np.cumsum(self.opt_super_arm_reward - mean_exp)
 
         plt.plot(regret, 'r', label='Regret')
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()
