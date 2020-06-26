@@ -23,14 +23,24 @@ class Experiment_4_5:
         
         self.ran = False
         
-    def run_clairvoyant(self):
+    def run_clairvoyant_context(self):
         # per ogni categoria calcolo il valore atteso di ogni arm
         exp_values_categories = np.multiply(self.p_categories, self.arms_candidates)
         # per ogni categoria trovo il valore atteso del best arm
         best_exp_value_categories = np.max(exp_values_categories, axis=1).T
         # Scelgo best arm per category
         opt_arm_categories = np.argmax(exp_values_categories, axis=1).T
-        return exp_values_categories, best_exp_value_categories
+        
+
+        return best_exp_value_categories
+    
+    def run_clairvoyant_nocontext(self):
+        # per ogni categoria calcolo il valore atteso di ogni arm aggregando le tre classi
+        exp_values_categories = np.mean(np.multiply(self.p_categories, self.arms_candidates),axis=0)
+        
+        best_exp_value = np.max(exp_values_categories)
+        
+        return best_exp_value
     
     def run_experiment(self, n_experiments, horizon, week = -1):
         '''
@@ -61,43 +71,94 @@ class Experiment_4_5:
             self.experiments_logs.append(experiment_log)
         self.ran = True
     
-    def plot_regret(self):
+    def plot_regret_nocontext(self):
         if not self.ran:
             return "Run the experiment before plotting"
         total_regret_list = []
         # per ogni persona con una categoria, regret_t è valore atteso migliore della categoria
         # meno valore atteso dell'arm scelto per tale categoria
         n_experiments = len(self.experiments_logs)
-        exp_values_categories, best_exp_value_categories = self.run_clairvoyant()
+        best_exp_value = self.run_clairvoyant_nocontext()
         
         for e in range(n_experiments):
             #print("experiment: {}".format(e))
             regret_list = []
             regret_t = 0
-            for reward_t in self.experiments_logs[e]:
-                category_t = reward_t[0]
-                arm_chosen_t = reward_t[1]
-                best_exp_value = best_exp_value_categories[category_t]
-                arm_exp_value = exp_values_categories[category_t][arm_chosen_t]
-                regret_t = best_exp_value - arm_exp_value
+            for log_t in self.experiments_logs[e]:
+                #category_t = reward_t[0]
+                #arm_chosen_t = reward_t[1]
+                reward = log_t[2]
+                
+                regret_t = best_exp_value - reward
                 regret_list.append(regret_t)
-            else:
-                total_regret_list.append(regret_list)
-        else:
+        
+            total_regret_list.append(regret_list)
             # faccio la media del regret_t di ogni experiment
-            average_regret_list = np.cumsum(np.mean(total_regret_list, axis=0))
-            # print("average_regret_list lenght: {}".format(len(average_regret_list)))
-            # print("cumulative average_regret_list lenght: {}\n".format(average_regret_list))
+        average_regret_list = np.cumsum(np.mean(total_regret_list, axis=0))
+        # print("average_regret_list lenght: {}".format(len(average_regret_list)))
+        # print("cumulative average_regret_list lenght: {}\n".format(average_regret_list))
 
         # Stampa Grafico della Regret
         plt.figure(0)
         plt.ylabel("Cumulative Regret in t")
         plt.xlabel("t")
         plt.plot(average_regret_list, 'r')
-        if self.week == -1:
-            plt.legend(["Regret TS"])
-        else:
-            plt.legend(["Regret TS with Context Generation"])
+        plt.legend(["Regret TS"])
         plt.show()
         
-        # TODO : add other statistics of the experiments
+    def plot_regret_context(self):
+        if not self.ran:
+            return "Run the experiment before plotting"
+        total_regret_list = []
+        # per ogni persona con una categoria, regret_t è valore atteso migliore della categoria
+        # meno valore atteso dell'arm scelto per tale categoria
+        n_experiments = len(self.experiments_logs)
+        best_exp_value_categories = self.run_clairvoyant_context()
+        
+        for e in range(n_experiments):
+            #print("experiment: {}".format(e))
+            regret_list = []
+            regret_t = 0
+            for log_t in self.experiments_logs[e]:
+                category_t = log_t[0]
+                reward = log_t[2]
+                best_exp_value = best_exp_value_categories[category_t]
+                
+                regret_t = best_exp_value - reward
+                regret_list.append(regret_t)
+        
+            total_regret_list.append(regret_list)
+            # faccio la media del regret_t di ogni experiment
+        average_regret_list = np.cumsum(np.mean(total_regret_list, axis=0))
+        # print("average_regret_list lenght: {}".format(len(average_regret_list)))
+        # print("cumulative average_regret_list lenght: {}\n".format(average_regret_list))
+
+        # Stampa Grafico della Regret
+        plt.figure(0)
+        plt.ylabel("Cumulative Regret in t")
+        plt.xlabel("t")
+        plt.plot(average_regret_list, 'r')
+        plt.legend(["Regret TS with Context Generation"])
+        plt.show()
+
+    def plot_reward(self):
+        n_experiments = len(self.experiments_logs)
+        rewards_exp= []
+        for e in range(n_experiments):
+            
+            rewards = []
+            for log_t in self.experiments_logs[e]:
+                reward = log_t[2]
+                rewards.append(reward)
+            
+            rewards_exp.append(rewards)
+        avg_reward_exp = np.cumsum(np.mean(rewards_exp, axis=0))
+
+        plt.figure(0)
+        plt.ylabel("Cumulative Reward in t")
+        plt.xlabel("t")
+        plt.plot(avg_reward_exp, 'r')
+        plt.scatter(len(avg_reward_exp),np.max(avg_reward_exp))
+        plt.legend(["Reward"])
+        plt.show()
+        print(np.max(avg_reward_exp))
