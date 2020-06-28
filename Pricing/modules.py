@@ -377,12 +377,12 @@ class Context_Manager():
                     #learner_1 = TS_Learner_candidate(context.learner.n_arms)
                     #learner_2 = TS_Learner_candidate(context.learner.n_arms)
 
-                    print("beta parameters learner 0")
-                    print(context.learner.beta_parameters)
-                    print("beta parameters learner 1")
-                    print(learner_1.beta_parameters)
-                    print("beta parameters learner 2")
-                    print(learner_2.beta_parameters)
+                    #print("beta parameters learner 0")
+                    #print(context.learner.beta_parameters)
+                    #print("beta parameters learner 1")
+                    #print(learner_1.beta_parameters)
+                    #print("beta parameters learner 2")
+                    #print(learner_2.beta_parameters)
 
                     number = len(contexts_set_copy.items())
                     # split[2] e split[3] sono associati a feature in che modo?
@@ -419,10 +419,10 @@ class Context_Manager():
 
 
                     #viene aggiunto il primo sub contesto, con un nuovo numero, le sue feature e il suo lerner
-                    contexts_set_copy[number] = Context(number, compl_feature_1, split[3])
+                    contexts_set_copy[number] = Context(number, compl_feature_1, split[2])
 
                     #viene aggiunto il secondo sub contesto, con il numero del padre, le sue feature e il suo lerner
-                    contexts_set_copy[index] = Context(index, compl_feature_2, split[2])
+                    contexts_set_copy[index] = Context(index, compl_feature_2, split[3])
 
 
             self.contexts_set = contexts_set_copy
