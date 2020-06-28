@@ -3,14 +3,14 @@ import numpy as np
 import random
 
 
-<<<<<<< HEAD
+
 #from .learner import *
 from learner import *
-=======
+
 from .learner import *
 from .utils_functions import *
 
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
 
 
 
@@ -85,10 +85,10 @@ class Context():
         # ad ogni contesto è associato un relativo learner
         self.learner = learner
         self.num_variables = 2
-<<<<<<< HEAD
+
         self.rewards_log = logs
         #self.rewards_log = []
-=======
+
         self.rewards_log = []
 
     def update(self, features_person, pulled_arm, reward):
@@ -139,7 +139,7 @@ class Context():
             ris = [feature, val_after_split[0], val_after_split[1], val_after_split[2]]
 
         return ris
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
 
 
     def split(self, candidates_values):
@@ -159,14 +159,14 @@ class Context():
         count_var_values = [[] for x in range(self.num_variables)]
         # per ogni elemento del subspace del contesto
         for t in self.subspace:
-<<<<<<< HEAD
+
             # per ogni variabile 
             for var in range(self.num_variables):
                 if t[var] not in count_var_values[var]:
                     count_var_values[var].append(t[var])
         
         # scelgo solo variabili con almeno due valori diversi, con mask di 0 e 1
-=======
+
 
             for var in range(self.num_variables):
 
@@ -176,7 +176,7 @@ class Context():
 
         # ottengo quanti valori diversi della variabile si occupa il contesto
         # scelgo solo le variabili del contesto con almeno due valori diversi, con 1 o 0
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
         splittable_vars = [1 if len(x)>=2 else 0 for x in count_var_values]
 
         # per ogni variabile del contesto splittabile, valuto il valore prima e dopo split
@@ -189,15 +189,14 @@ class Context():
                 tmp_split_condition = self.split_condition(count_var_values[index][0], candidates_values)
                 if len(tmp_split_condition) > 0:
                     candidate_split.append(tmp_split_condition)
-<<<<<<< HEAD
+
         #restituisco una tupla :(subspace-feature, valore di split condition, learner contesto 0 , learner contesto 1)
         # subspace-feature è valore della variabile per lo split, i due learner sono associati ai due nuovi contesti
         
         # scelgo la split che massimizza valore di split condition
-=======
+
         #restituisco una tupla che ha al primo posto lo spazio delle feature, al secodno il valore della split condition, terzo e quarto i lerner associati
 
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
         if len(candidate_split) > 0:
             return candidate_split[np.argmax([a[1] for a in candidate_split])]
         # se vuota, restituisco lista vuota
@@ -341,27 +340,26 @@ class Context_Manager():
     def split(self, time, candidates_values):
     	# effettuo split se week!=1 ed è t corrisponde
         if (self.week != -1) and ((time+1)%self.week == 0):
-<<<<<<< HEAD
+
             # copio insieme dei contesti attuale            
             contexts_set_copy = self.contexts_set.copy()
             # ciclo su ogni contesto del contexts_set
-=======
+
             # TODO: EFFETTUA SPLIT PER OGNI CONTESTO
 
             contexts_set_copy = self.contexts_set.copy()
 
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
             for index, context in self.contexts_set.items():
             	# chiamo context.split(), re
                 split = context.split(candidates_values)
-<<<<<<< HEAD
-=======
 
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
+
                 #se lo split non restituisce una stringa vuota significa che bisogna effettuarlo
                 # cosa possiede split?
                 if split != []:
-<<<<<<< HEAD
+
                     # trovo nuovo indice cel nuovo contesto
 
                     feature = split[0]
@@ -411,7 +409,7 @@ class Context_Manager():
 ###############################
             
             # aggiorno il context_set con quello nuovo dopo aver creato i nuovi contesti 
-=======
+
                     #viene eliminato il contesto padre e inseriti due nuovi contesti, che sono complementari nello spazio delle feature tra di loro rispetto al padre
                     number = len(contexts_set_copy.items())
 
@@ -426,12 +424,12 @@ class Context_Manager():
                     #viene aggiunto il secondo sub contesto, con il numero del padre, le sue feature e il suo lerner
                     contexts_set_copy[index] = Context(index, compl_feature_2, split[2])
 
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
             self.contexts_set = contexts_set_copy
 
             # aggiorna self.features_context con l'indice del contesto corretto
             for context in self.contexts_set.values():
-<<<<<<< HEAD
+
             	for tup in context.subspace:
             		for key in self.features_context.keys():
             			if tup == key:
@@ -443,7 +441,7 @@ class Context_Manager():
             else:
             	print("\n")
             # condizione non rispettata, non effettuo split
-=======
+
                 for tup in context.subspace:
                     for key in self.features_context.keys():
                         if tup == key:
@@ -451,7 +449,7 @@ class Context_Manager():
             ####
             #print(time+1)
             #print(self.features_context)
->>>>>>> 0600e3659958ce6cf8d10c570b28f73c53edae40
+
         else:
             pass
 
