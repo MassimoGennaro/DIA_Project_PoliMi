@@ -161,4 +161,8 @@ class Experiment_4_5:
         plt.scatter(len(avg_reward_exp),np.max(avg_reward_exp))
         plt.legend(["Reward"])
         plt.show()
+        print(avg_reward_exp[48], 48)
+        print(avg_reward_exp[50], 50)
+        print(avg_reward_exp[60], 60)
+        print(avg_reward_exp[70], 70)
         print(np.max(avg_reward_exp))

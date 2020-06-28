@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.gaussian_process import GaussianProcessRegressor
+import sklearn.gaussian_process
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
 
@@ -23,8 +23,8 @@ class GPTS_Learner:
 
         alpha = 10.0
         kernel = C(1.0, (1e-3, 1e3)) * RBF(1.0, (1e-3, 1e3))
-        self.gp = GaussianProcessRegressor(kernel=kernel, alpha=alpha ** 2,
-                                           normalize_y=True, n_restarts_optimizer=9)
+        self.gp = sklearn.gaussian_process.GaussianProcessRegressor(kernel=kernel, alpha=alpha ** 2,
+                                                                    normalize_y=True, n_restarts_optimizer=9)
 
     def update_observations(self, pulled_arm, reward):
         """
@@ -81,6 +81,6 @@ class GPTS_Learner:
         x = np.atleast_2d(samples[0]).T
         y = [y for (x, y) in zip(samples[0], samples[1])]
         self.gp.fit(x, y)
-        self.gp = GaussianProcessRegressor(kernel=self.gp.kernel_,
-                                                         alpha=self.gp.alpha,
-                                                         normalize_y=True, n_restarts_optimizer=0)
+        self.gp = sklearn.gaussian_process.GaussianProcessRegressor(kernel=self.gp.kernel_,
+                                                                    alpha=self.gp.alpha,
+                                                                    normalize_y=True, n_restarts_optimizer=0)
