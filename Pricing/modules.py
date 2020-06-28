@@ -89,7 +89,7 @@ class Context():
         self.rewards_log = logs
         #self.rewards_log = []
 
-        self.rewards_log = []
+        #self.rewards_log = []
 
     def update(self, features_person, pulled_arm, reward):
         # Aggiorna i parametri beta del learner
@@ -411,18 +411,18 @@ class Context_Manager():
             # aggiorno il context_set con quello nuovo dopo aver creato i nuovi contesti 
 
                     #viene eliminato il contesto padre e inseriti due nuovi contesti, che sono complementari nello spazio delle feature tra di loro rispetto al padre
-                    number = len(contexts_set_copy.items())
+                    #number = len(contexts_set_copy.items())
 
-                    compl_feature_1 = [x for x in context.subspace if split[0] not in x]
-                    compl_feature_2 = [x for x in context.subspace if split[0] in x]
+                    #compl_feature_1 = [x for x in context.subspace if split[0] not in x]
+                    #compl_feature_2 = [x for x in context.subspace if split[0] in x]
 
 
 
                     #viene aggiunto il primo sub contesto, con un nuovo numero, le sue feature e il suo lerner
-                    contexts_set_copy[number] = Context(number, compl_feature_1, split[2])
+                    #contexts_set_copy[number] = Context(number, compl_feature_1, split[2], log_1)
 
                     #viene aggiunto il secondo sub contesto, con il numero del padre, le sue feature e il suo lerner
-                    contexts_set_copy[index] = Context(index, compl_feature_2, split[3])
+                    #contexts_set_copy[index] = Context(index, compl_feature_2, split[3], log_2)
 
 
             self.contexts_set = contexts_set_copy
