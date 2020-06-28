@@ -268,6 +268,7 @@ class Context_Manager():
 
                     feature = split[0]
                     # val_after_split = split[1]
+                    
                     # LEARNER AGGIORNATI
                     learner_1 = split[2] # questo learner è associato al log SENZA la feature
                     learner_2 = split[3] # questo learner è associato al log CON la feature
