@@ -1,53 +1,55 @@
-from .advertising.environment.CampaignEnvironment import *
-from .advertising.learners.Subcampaign_Learner import *
-from .advertising.knapsack.knapsack import *
-from .pricing.modules import *
+from Advertising.environment.Advertising_Config_Manager import *
+from Advertising.environment.CampaignEnvironment import *
+from Advertising.learners.Subcampaign_Learner import *
+from Advertising.knapsack.knapsack import *
+from Pricing.modules import *
+from Pricing.Pricing_Config_Manager import *
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 class Experiment_6:
-    def __init__(self, max_budget=5.0, n_arms=6, prices = [5, 10, 15, 20, 25] , env_id = 0):
+    def __init__(self, max_budget=5.0, n_arms=6, pricing_env_id = 0, advertising_env_id = 0):
+        ## ADVERTISING ##
+        
         # Budget settings
         self.max_budget = max_budget
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        env = Environment(env_id)
+        adv_env = Advertising_Config_Manager(advertising_env_id)
 
         # Phase settings
-        self.phase_labels = env.phase_labels
-        self.phase_weights = env.get_phase_weights()
+        self.phase_labels = adv_env.phase_labels
+        self.phase_weights = adv_env.get_phase_weights()
 
         # Class settings
-        self.feature_labels = env.feature_labels
+        self.feature_labels = adv_env.feature_labels
 
         # Click functions
-        self.click_functions = env.click_functions
+        self.click_functions = adv_env.click_functions
         
-        # Conversion rates
-        with open('AdvPrc/pricing/configs/pricing_env.json') as json_file:
-            data = json.load(json_file)
-        campaign = data["campaigns"][env_id]
-        
-        
-        categories = {i:tuple(campaign["categories"][i]) for i in range(len(campaign["categories"]))}
-        self.categories = categories
-        self.features = campaign["features"]
-        features_space = [tuple(campaign["features_space"][i]) for i in range(len(campaign["features_space"]))]
-        self.features_space = features_space
-        self.p_categories = np.array(campaign["p_categories"])
-        self.arms_candidates = np.array(prices)
-        self.n_arms_price = len(self.arms_candidates)
-        
-        
-
         # Experiment settings
-        self.sigma = env.sigma
+        self.sigma = adv_env.sigma
+        ################
+        
+        ## PRICING ##
 
+        pri_env = Pricing_Config_Manager(pricing_env_id)
+        self.categories = pri_env.get_indexed_categories()
+        self.features = pri_env.features
+        self.features_space = pri_env.feature_space
+        self.p_categories = np.array(pri_env.probabilities)
+        self.arms_candidates = np.array(pri_env.prices)
+        self.n_arms_price = len(self.arms_candidates)
+        ################
+        
+
+        
+        ## Clairvoyant optimal reward ##
         self.opt_super_arm_reward = self.run_clairvoyant()
 
-        ## Rewards for each experiment (each element is a list of T rewards)
+        ## Rewards for each experiment (each element will be a list of 'horizon' rewards)
         self.opt_rewards_per_experiment = []
         self.gpts_rewards_per_experiment = []
 
@@ -88,7 +90,7 @@ class Experiment_6:
         # utilizziamo un person_manager per gestire la creazione delle persone
         p_manager = Person_Manager(self.categories, self.p_categories, self.features)
         # utilizziamo un context_manager per gestire la gestione dei contesti e learner
-        c_manager = Context_Manager(self.n_arms_price, self.features_space, self.arms_candidates)
+        c_manager = Context_Manager(self.n_arms_price, self.features_space, self.categories, self.arms_candidates, contexts_known=True)
         
         # c_manager.add_context() crea un contesto della categoria passata
         for i in range(len(self.categories)):
@@ -214,7 +216,7 @@ class Experiment_6:
         # for e in range(len(self.gpts_rewards_per_experiment)):
         #     plt.plot(self.gpts_rewards_per_experiment[e], 'b', label='Expected Reward')
 
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()
 
     def plot_regret(self):
@@ -229,5 +231,5 @@ class Experiment_6:
         regret = np.cumsum(self.opt_super_arm_reward - mean_exp)
 
         plt.plot(regret, 'r', label='Regret')
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()

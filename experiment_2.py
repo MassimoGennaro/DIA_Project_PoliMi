@@ -1,9 +1,9 @@
-from .advertising.environment.CampaignEnvironment import *
-from .advertising.learners.Subcampaign_Learner import *
-from .advertising.knapsack.knapsack import *
+from Advertising.environment.CampaignEnvironment import *
+from Advertising.environment.Advertising_Config_Manager import *
+from Advertising.learners.Subcampaign_Learner import *
+from Advertising.knapsack.knapsack import *
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 class Experiment_2:
     def __init__(self, max_budget=5.0, n_arms=6, env_id=0):
@@ -12,7 +12,8 @@ class Experiment_2:
         self.n_arms = n_arms
         self.budgets = np.linspace(0.0, self.max_budget, self.n_arms)
 
-        env = Environment(env_id)
+        env = Advertising_Config_Manager(env_id)
+        self.real_values = None
 
         # Phase settings
         self.phase_labels = env.phase_labels
@@ -27,7 +28,7 @@ class Experiment_2:
         # Experiment settings
         self.sigma = env.sigma
 
-        self.opt_super_arm_reward = self.run_clairvoyant()
+        self.opt_super_arm_reward = None # self.run_clairvoyant()
 
         ## Rewards for each experiment (each element is a list of T rewards)
         self.opt_rewards_per_experiment = []
@@ -47,6 +48,7 @@ class Experiment_2:
             opt_env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
 
         real_values = opt_env.round_all()
+        self.real_values = real_values
         opt_super_arm = knapsack_optimizer(real_values)
 
         opt_super_arm_reward = 0
@@ -54,14 +56,19 @@ class Experiment_2:
             reward = opt_env.subcampaigns[subc_id].round(pulled_arm)
             opt_super_arm_reward += reward
 
-        return opt_super_arm_reward
+        self.opt_super_arm_reward = opt_super_arm_reward
+
+        return get_dataframe(real_values, opt_super_arm, self.budgets)
 
 
-    def run(self, n_experiments=10, horizon=56):
+    def run(self, n_experiments=10, horizon=56, GP_graphs=False):
         """
         Experimental Solution
         :return:
         """
+
+        assert (self.opt_super_arm_reward is not None), "Run the clairvoyant solution before!"
+
         self.gpts_rewards_per_experiment = []
         self.opt_rewards_per_experiment = [self.opt_super_arm_reward] * horizon
 
@@ -123,11 +130,15 @@ class Experiment_2:
 
             self.gpts_rewards_per_experiment.append(rewards)
 
+            if GP_graphs:
+                self.plot_GP_graphs(subc_learners)
+
         self.ran = True
+
 
     def plot_experiment(self):
         if not self.ran:
-            return "Run the experiment before plotting"
+            return "Run the experiment before plotting!"
 
         plt.figure()
         plt.ylabel("Number of Clicks")
@@ -139,7 +150,7 @@ class Experiment_2:
         plt.plot(opt_exp, 'g', label='Optimal Reward')
         plt.plot(mean_exp, 'b', label='Expected Reward')
 
-        plt.legend(loc="upper left")
+        plt.legend(loc="lower right")
         plt.show()
 
     def plot_regret(self):
@@ -156,3 +167,26 @@ class Experiment_2:
         plt.plot(regret, 'r', label='Regret')
         plt.legend(loc="upper left")
         plt.show()
+
+    def plot_GP_graphs(self, subc_learners):
+
+        x_pred = np.atleast_2d(self.budgets).T
+        for i, subc_learner in enumerate(subc_learners):
+            y_pred = subc_learner.means
+            sigma = subc_learner.sigmas
+            X = np.atleast_2d(subc_learner.pulled_arms).T
+            Y = subc_learner.collected_rewards.ravel()
+            real_values = self.real_values[i]
+            title = subc_learner.label
+
+            plt.plot(x_pred, real_values, 'r:', label=r'$click function$')
+            plt.plot(X.ravel(), Y, 'ro', label=u'Observed Clicks')
+            plt.plot(x_pred, y_pred, 'b-', label=u'Predicted Clicks')
+            plt.fill(np.concatenate([x_pred, x_pred[::-1]]),
+                     np.concatenate([y_pred - 1.96 * sigma, (y_pred + 1.96 * sigma)[::-1]]),
+                     alpha=.5, fc='b', ec='None', label='95% conf interval')
+            plt.title(title)
+            plt.xlabel('$budget$')
+            plt.ylabel('$daily clicks$')
+            plt.legend(loc='lower right')
+            plt.show()

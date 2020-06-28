@@ -1,4 +1,7 @@
 import math
+import pandas as pd
+pd.set_option('precision', 3)
+
 import numpy as np
 
 # minus infinity value
@@ -82,3 +85,17 @@ def get_knapsack_values(table, assignments):
     for row in range(len(assignments)):
         values.append(table[row][assignments[row]])
     return values
+
+def get_dataframe(table, assignments, columns):
+    def highlight(s, map):
+        a = next(map)
+        attr = 'background-color: yellow'
+        return [attr if v == a else '' for v in range(len(s))]
+
+    df = pd.DataFrame(data=table,
+                        index=pd.Index(["C" + str(i) for i in range(len(table))]),
+                        columns=columns
+                        )
+    df.insert(len(table[0]),'Budget',assignments)
+    df = df.style.apply(highlight, map=iter(assignments), axis=1)
+    return df
