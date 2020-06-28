@@ -35,13 +35,6 @@ class TS_Learner(Learner):
         idx =  np.argmax(np.random.beta(self.beta_parameters[:,0],self.beta_parameters[:,1]))
         return idx
 
-    # reward = 1  se successo, reward = 0 se fallimento
-    # def update(self,pulled_arm,reward):
-    #     self.t+=1
-    #     self.update_observations(pulled_arm, reward)
-    #     self.beta_parameters[pulled_arm,0] =  self.beta_parameters[pulled_arm,0] + reward
-    #     self.beta_parameters[pulled_arm,1] =  self.beta_parameters[pulled_arm,1] + 1.0 - reward
-
     def prob_succ_arm(self, arm):
         arm_successes = self.beta_parameters[arm][0]
         arm_failures = self.beta_parameters[arm][1]
@@ -59,6 +52,7 @@ class TS_Learner(Learner):
 
         #Dati i valori dei candidati (prezzi) restituisce il best arm che è dato dal prodotto value*prob_success
 
+    # best arm è indice dell'arm con il miglir valore atteso stimato
     def best_arm(self, candidates_values):
         best = 0
         best_value = self.expected_value(0,candidates_values[0]) #this should crash whenever the inputs have size zero
@@ -78,12 +72,17 @@ class TS_Learner(Learner):
         succ_arm = self.prob_succ_arm(best_arm)
         alfa_best_arm = self.beta_parameters[best_arm][0]
         beta_best_arm = self.beta_parameters[best_arm][1]
-        
+        # il lower bound deve decrescere nel tempo secondo t...
+        # infatti più passa il tempo e più dovremmo essere sicuri delle nostre stime
+        # altrimenti ad ogni context generetaion perdiamo sicurezza nelle stime, ma non è così
         minus = -pow(-math.log(succ_arm * (1-succ_arm)) / (2 * (alfa_best_arm + beta_best_arm)), 0.5) 
+        # TODO: sostituisci (alfa_best_arm + beta_best_arm) con il self.t
+        # NEW!
+        #minus = -pow(-math.log(succ_arm * (1-succ_arm)) / (2 * (self.t)), 0.5) 
         return exp_value - minus
 ########################################
 
-# differenza con ts normale?
+
 class TS_Learner_candidate(TS_Learner):
     def __init__(self, n_arms):
         super().__init__(n_arms)
@@ -101,12 +100,7 @@ class TS_Learner_candidate(TS_Learner):
         # scelgo braccio con expected reward più alto
         idx =  np.argmax(expected_reward)
         return idx
-
-    # aggiorno la funzione per considerare la media di ogni arm.
-    def update_observations(self, pulled_arm, reward):
-        self.rewards_per_arm[pulled_arm].append(reward)
-        self.collected_rewards = np.append(self.collected_rewards, reward)
-
+    
     def update(self, pulled_arm, reward):
         self.t += 1
         esito = 0
@@ -119,3 +113,8 @@ class TS_Learner_candidate(TS_Learner):
         self.update_observations(pulled_arm,reward)
         self.beta_parameters[pulled_arm, 0] = self.beta_parameters[pulled_arm,0] + esito
         self.beta_parameters[pulled_arm, 1] = self.beta_parameters[pulled_arm,1] + 1.0 - esito
+
+    # aggiorno la funzione per considerare la media di ogni arm.
+    def update_observations(self, pulled_arm, reward):
+        self.rewards_per_arm[pulled_arm].append(reward)
+        self.collected_rewards = np.append(self.collected_rewards, reward)
