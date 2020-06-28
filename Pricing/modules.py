@@ -7,8 +7,8 @@ import random
 #from .learner import *
 from learner import *
 
-from .learner import *
-from .utils_functions import *
+#from .learner import *
+
 
 
 
@@ -259,7 +259,7 @@ class Context():
         return ris
 
 
-	# dal log toglie i dati senza feature che NON vogliamo considerare
+    # dal log toglie i dati senza feature che NON vogliamo considerare
     def fetch_log(self, feature):
         new_log = []
         for i in range(len(self.rewards_log)):
@@ -267,11 +267,11 @@ class Context():
                 new_log.append(self.rewards_log[i])
         return new_log
 
-	#dato un log, crea un learner addestrato con l'esperienza del log
+    #dato un log, crea un learner addestrato con l'esperienza del log
     def learner_sub_context(self, log, candidates_values):
-    	# creo nuovo learner
-    	# TODO: i nuovi learner devono possedere lo stesso t, per essere più sicuri
-    	# inoltre i nuovi learner devono aggiornarsi con i vecchi log.
+        # creo nuovo learner
+        # TODO: i nuovi learner devono possedere lo stesso t, per essere più sicuri
+        # inoltre i nuovi learner devono aggiornarsi con i vecchi log.
         new_learner = TS_Learner_candidate(self.learner.n_arms)
         # faccio update del learner
         # NEW! qui aggiorno con l'attuale log, ma non con il vecchio!
@@ -351,7 +351,7 @@ class Context_Manager():
 
 
             for index, context in self.contexts_set.items():
-            	# chiamo context.split(), re
+                # chiamo context.split(), re
                 split = context.split(candidates_values)
 
 
@@ -397,7 +397,7 @@ class Context_Manager():
                     #contexts_set_copy[index] = Context(index, compl_feature_2, split[2])
 ###############################
 
-					# TODO CAMBIA context.rewards_log con contesto 1 e contesto 2
+                    # TODO CAMBIA context.rewards_log con contesto 1 e contesto 2
                     # NEW! i nuovi contesti ora hanno i learner associati correttamente con i contesti#
                     # nuovo sotto-contesto, nuovo numero, subspace SENZA feature, suo learner
                     log_1 = context.fetch_log(feature)
@@ -430,16 +430,16 @@ class Context_Manager():
             # aggiorna self.features_context con l'indice del contesto corretto
             for context in self.contexts_set.values():
 
-            	for tup in context.subspace:
-            		for key in self.features_context.keys():
-            			if tup == key:
-            				self.features_context[key] = context.context_id
-            				
+                for tup in context.subspace:
+                    for key in self.features_context.keys():
+                        if tup == key:
+                            self.features_context[key] = context.context_id
+          
             # Elenca nuovi contesti
             for c in self.contexts_set.values():
-            	print(c.context_id, c.subspace)
+                print(c.context_id, c.subspace)
             else:
-            	print("\n")
+                print("\n")
             # condizione non rispettata, non effettuo split
 
                 for tup in context.subspace:

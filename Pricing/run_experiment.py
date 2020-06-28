@@ -7,7 +7,6 @@ from learner import *
 from modules import *
 
 
-
 # setto il seed di random per la riproducibilità
 random.seed(1234)
 
@@ -113,7 +112,8 @@ beta_parameters_experiments = {}
 for e in range(n_experiments):
     print("\nexperiment: {}".format(e))
     # creo environment
-    environment = Personalized_Environment(arms_candidates, p_categories, T)
+    #environment = Personalized_Environment(arms_candidates, p_categories, T)
+    environment = Personalized_Environment(arms_candidates, p_categories)
 
     # person_manager gestisce creazione persone
     p_manager = Person_Manager(categories, p_categories, features)
