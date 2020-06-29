@@ -6,6 +6,8 @@ import random
 
 #from .learner import *
 from Pricing.learner import *
+#from learner import *
+
 
 #from .learner import *
 
@@ -97,6 +99,8 @@ class Context():
         #registro una lista delle reward, con essa devo effettuare la split
         self.rewards_log.append((features_person, pulled_arm, reward))
 
+
+
 #dal log toglie tutti i dati che riguardano una feature che NON vogliamo considerare
     def fetch_log(self, feature):
         new_log = []
@@ -112,24 +116,6 @@ class Context():
             new_learner.update(log[i][1], log[i][2])
         return new_learner
 
-#data una feature dalla quale splittare calcola i valori di expected reward POST split. Sono la parte sinistra della split condition
-    def val_after_split(self, feature, candidates_values):
-        sub_1 = self.fetch_log(feature)
-        sub_2 = [x for x in self.rewards_log if x not in sub_1]
-        # TODO : FIX THIS #
-        if len(self.rewards_log) > 0:
-            prob_1 = len(sub_1)/len(self.rewards_log)
-            prob_2 = len(sub_2)/len(self.rewards_log)
-        else:
-            prob_1 = 0
-            prob_2 = 0
-        ###################
-        lern_1 = self.learner_sub_context(sub_1, candidates_values)
-        lern_2 = self.learner_sub_context(sub_2, candidates_values)
-        exp_1 = lern_1.best_arm_lower_bound(candidates_values)
-        exp_2 = lern_2.best_arm_lower_bound(candidates_values)
-        ris = [prob_1*exp_1+prob_2*exp_2, lern_1, lern_2]
-        return ris
 
 #verifica che la split condition sia verificata e nel caso restituisce una tupla con (feature, val_after_split, lerner  sub contesto 1, lerner  sub contesto 2)
     def split_condition(self, feature, candidates_values):
@@ -139,7 +125,6 @@ class Context():
             ris = [feature, val_after_split[0], val_after_split[1], val_after_split[2]]
 
         return ris
-
 
 
     def split(self, candidates_values):
@@ -204,20 +189,6 @@ class Context():
             return candidate_split
 
 
-    # verifica split condition secondo tale valore di una variabile, restituisce
-    # (feature, val_after_split, learner  sub contesto 1, learner  sub contesto 2)
-    def split_condition(self, feature, candidates_values):
-        ris = []
-        # calcolo valore dopo lo split secondo tale feature
-        val_after_split = self.val_after_split(feature, candidates_values)
-        # se supera il lower bound del best arm
-        # 
-        if val_after_split[0] > self.learner.best_arm_lower_bound(candidates_values):
-            ris = [feature, val_after_split[0], val_after_split[1], val_after_split[2]]
-            
-        return ris
-
-
     # Data feature da splittare, calcola i valori di expected reward POST split.
     # è a sinistra nella split condition
     def val_after_split(self, feature, candidates_values):
@@ -258,38 +229,7 @@ class Context():
         ris = [prob_1*exp_1+prob_2*exp_2, learn_1, learn_2]
         return ris
 
-
-    # dal log toglie i dati senza feature che NON vogliamo considerare
-    def fetch_log(self, feature):
-        new_log = []
-        for i in range(len(self.rewards_log)):
-            if feature not in self.rewards_log[i][0]:
-                new_log.append(self.rewards_log[i])
-        return new_log
-
-    #dato un log, crea un learner addestrato con l'esperienza del log
-    def learner_sub_context(self, log, candidates_values):
-        # creo nuovo learner
-        # TODO: i nuovi learner devono possedere lo stesso t, per essere più sicuri
-        # inoltre i nuovi learner devono aggiornarsi con i vecchi log.
-        new_learner = TS_Learner_candidate(self.learner.n_arms)
-        # faccio update del learner
-        # NEW! qui aggiorno con l'attuale log, ma non con il vecchio!
-        # i nuovi learner non apprendono dal passato log, solo dal presente log
-
-        for i in range(len(log)):
-            new_learner.update(log[i][1], log[i][2])
-            
-
-        return new_learner
-
     
-    def update(self, features_person, pulled_arm, reward):
-        # Aggiorna i parametri beta del learner
-        self.learner.update(pulled_arm, reward)
-        #registro una lista delle reward, con essa devo effettuare la split
-        self.rewards_log.append((features_person, pulled_arm, reward))
-
 
 
 
@@ -344,10 +284,6 @@ class Context_Manager():
             # copio insieme dei contesti attuale            
             contexts_set_copy = self.contexts_set.copy()
             # ciclo su ogni contesto del contexts_set
-
-            # TODO: EFFETTUA SPLIT PER OGNI CONTESTO
-
-            contexts_set_copy = self.contexts_set.copy()
 
 
             for index, context in self.contexts_set.items():
@@ -412,18 +348,6 @@ class Context_Manager():
 
                     #viene eliminato il contesto padre e inseriti due nuovi contesti, che sono complementari nello spazio delle feature tra di loro rispetto al padre
                     #number = len(contexts_set_copy.items())
-
-                    #compl_feature_1 = [x for x in context.subspace if split[0] not in x]
-                    #compl_feature_2 = [x for x in context.subspace if split[0] in x]
-
-
-
-                    #viene aggiunto il primo sub contesto, con un nuovo numero, le sue feature e il suo lerner
-                    #contexts_set_copy[number] = Context(number, compl_feature_1, split[2], log_1)
-
-                    #viene aggiunto il secondo sub contesto, con il numero del padre, le sue feature e il suo lerner
-                    #contexts_set_copy[index] = Context(index, compl_feature_2, split[3], log_2)
-
 
             self.contexts_set = contexts_set_copy
 
