@@ -77,6 +77,7 @@ class Experiment_4_5:
         total_regret_list = []
         # per ogni persona con una categoria, regret_t è valore atteso migliore della categoria
         # meno valore atteso dell'arm scelto per tale categoria
+        exp_values_categories = np.mean(np.multiply(self.p_categories, self.arms_candidates),axis=0)
         n_experiments = len(self.experiments_logs)
         best_exp_value = self.run_clairvoyant_nocontext()
         
@@ -85,11 +86,15 @@ class Experiment_4_5:
             regret_list = []
             regret_t = 0
             for log_t in self.experiments_logs[e]:
-                #category_t = reward_t[0]
-                #arm_chosen_t = reward_t[1]
+                #category_t = log_t[0]
+                arm_chosen_t = log_t[1]
                 reward = log_t[2]
+                val_atteso_stimato_arm = log_t[3]
+                val_atteso_arm = exp_values_categories[arm_chosen_t]
                 
-                regret_t = best_exp_value - reward
+                regret_t = best_exp_value - val_atteso_arm
+                #regret_t = best_exp_value - val_atteso_stimato_arm
+                #regret_t = best_exp_value - reward
                 regret_list.append(regret_t)
         
             total_regret_list.append(regret_list)
@@ -113,6 +118,11 @@ class Experiment_4_5:
         # per ogni persona con una categoria, regret_t è valore atteso migliore della categoria
         # meno valore atteso dell'arm scelto per tale categoria
         n_experiments = len(self.experiments_logs)
+
+        # matrice valori attesi categoria-arm
+        exp_values_categories = np.multiply(self.p_categories, self.arms_candidates)
+
+
         best_exp_value_categories = self.run_clairvoyant_context()
         
         for e in range(n_experiments):
@@ -121,10 +131,15 @@ class Experiment_4_5:
             regret_t = 0
             for log_t in self.experiments_logs[e]:
                 category_t = log_t[0]
+                pulled_arm = log_t[1]
                 reward = log_t[2]
+                val_atteso_stimato_arm = log_t[3]
                 best_exp_value = best_exp_value_categories[category_t]
+                val_atteso_arm = exp_values_categories[category_t][pulled_arm]
                 
-                regret_t = best_exp_value - reward
+                #regret_t = best_exp_value - reward
+                #regret_t = best_exp_value - val_atteso_stimato_arm
+                regret_t = best_exp_value - val_atteso_arm
                 regret_list.append(regret_t)
         
             total_regret_list.append(regret_list)

@@ -64,7 +64,7 @@ opt_arm_categories = np.argmax(exp_values_categories, axis=1).T
 T = 5000
 
 # week è ogni quante persone effettua split
-#week = -1
+week = -1
 #week = 6000
 #week = 3000
 #week = 1500
@@ -75,10 +75,10 @@ T = 5000
 #week = 100
 #week = 50
 #week = 25
-week = 15
+#week = 15
 
 # numero esperimenti paralleli
-n_experiments = 1
+n_experiments = 25
 
 # STAMPO INFORMAZIONI UTILI PER ANALISI ESPERIMENTO
 
@@ -144,15 +144,25 @@ for e in range(n_experiments):
     regret_list = []
     regret_t = 0
     # trovo la lista dei regret di e
-    for reward_t in experiments_logs[e]:
-        # data la reward_t, trovo categoria persona e chosen arm
-        category_t = reward_t[0]
-        arm_chosen_t = reward_t[1]
+    for log_t in experiments_logs[e]:
+
+        # dato il log_t, trovo categoria persona e chosen arm
+        category_t = log_t[0]
+        arm_chosen_t = log_t[1]
+        reward_t = log_t[2]
+        #NEW!
+        val_atteso_stimato_arm = log_t[3]
+
         # dalla categoria ricavo quale fosse il best expected value e il chosen expected value
         best_exp_value = best_exp_value_categories[category_t]
+
+        # TODO: non voglio differenza fra best e true arm_exp_value, ma con il valore atteso stimato
         arm_exp_value = exp_values_categories[category_t][arm_chosen_t]
+
         # la regret è la differenza fra questi due expected reward
-        regret_t = best_exp_value - arm_exp_value
+        #regret_t = best_exp_value - arm_exp_value
+        #NEW!
+        regret_t = best_exp_value - val_atteso_stimato_arm
         regret_list.append(regret_t)
     else:
         total_regret_list.append(regret_list)

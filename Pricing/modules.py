@@ -152,13 +152,6 @@ class Context():
         
         # scelgo solo variabili con almeno due valori diversi, con mask di 0 e 1
 
-
-            for var in range(self.num_variables):
-
-                if t[var] not in count_var_values[var]:
-                    count_var_values[var].append(t[var])
-
-
         # ottengo quanti valori diversi della variabile si occupa il contesto
         # scelgo solo le variabili del contesto con almeno due valori diversi, con 1 o 0
 
@@ -269,10 +262,13 @@ class Context_Manager():
         self.split(self.time, candidates_values)
 
         context_id = self.features_context[person_category]
-        #print(context_id) ####################à
+        
         selected_arm = self.contexts_set[context_id].learner.pull_arm(candidates_values)
-        #print(self.contexts_set[context_id].subspace) ####################
-        #print() ####################
+
+
+        #print(context_id) 
+        #print(self.contexts_set[context_id].subspace) 
+        #print() 
         return selected_arm
 
 
@@ -364,7 +360,7 @@ class Context_Manager():
                 print(c.context_id, c.subspace)
             else:
                 print("\n")
-            # condizione non rispettata, non effettuo split
+            # TODO: perchè si ripete questo doppio for?
 
                 for tup in context.subspace:
                     for key in self.features_context.keys():
@@ -383,6 +379,18 @@ class Context_Manager():
         context_id = self.features_context[features_person]
         # chiamo update del learner del contesto
         self.contexts_set[context_id].update(features_person, pulled_arm, reward)
+
+    def val_att_arm(self, features_person, pulled_arm, candidates_values):
+    	# ottengo l'id del contesto dalle feature della persona
+        context_id = self.features_context[features_person]
+        alpha = self.contexts_set[context_id].learner.beta_parameters[pulled_arm][0]
+        beta = self.contexts_set[context_id].learner.beta_parameters[pulled_arm][1]
+        price = candidates_values[pulled_arm]
+
+        probab_arm = alpha/(alpha + beta)
+        expected_value = probab_arm * price
+
+        return expected_value
 
 
 # questa classe si occupa di creare i contesti, i learner e le persone.
@@ -407,6 +415,10 @@ class General():
             candidates_values = self.environment.arms_candidates
             # scelgo arm
             pulled_arm = self.context_manager.select_arm(features_person, t, candidates_values)
+
+            #NEW!: ritorna valore atteso di tale arm dal contesto assegnato
+            valore_atteso_arm = self.context_manager.val_att_arm(features_person, pulled_arm, candidates_values)
+
             # ottengo reward positiva o nulla
             reward_person = self.environment.round(category_person, pulled_arm)
 
@@ -414,7 +426,9 @@ class General():
             self.context_manager.update_context(features_person, pulled_arm, reward_person)
 
             # aggiorno il log dell'experiment, con esso analizzo regret
-            self.rewards_log.append([category_person, pulled_arm, reward_person])
+            #NEW! 
+            self.rewards_log.append([category_person, pulled_arm, reward_person, valore_atteso_arm])
+            #self.rewards_log.append([category_person, pulled_arm, reward_person])
 
 
         return self.rewards_log
