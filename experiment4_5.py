@@ -47,9 +47,14 @@ class Experiment_4_5:
         default week = -1
         if week > 0 performs context generation
         '''
+        # ogni experiment corrisponde a n esperimenti paralleli, con T persone.
+        # per il grafico della regret, faccio la regret cumulativa di ognuno
+        # e calcolo la media su n experiment.
+        # ma experiments_logs ad ogni run deve prima essere svuotato, poi riusato.
+        self.experiments_logs = []
         self.week = week
         for e in range(n_experiments):
-            print("Perforiming experiment: {}".format(e+1))
+            print("Performing experiment: {}".format(e+1))
             # ad ogni experiment creiamo un nuovo Environment
             
             # utilizziamo un environment adatto, rende la reward in base a category e candidato
@@ -57,18 +62,21 @@ class Experiment_4_5:
             # utilizziamo un person_manager per gestire la creazione di nuove persone
             p_manager = Person_Manager(self.categories, self.p_categories, self.features)
             # utilizziamo un context_manager per gestire la gestione dei contesti e learner
-            c_manager = Context_Manager(self.n_arms, self.features_space, self.categories, self.arms_candidates, week)
+            c_manager = Context_Manager(self.n_arms, self.features_space, self.categories, self.arms_candidates, week, contexts_known = False)
             # general gestisce la logica
             general = General(p_manager, c_manager, environment)
 
             # general itera per t round, restituendo le statistiche finali dell'esperimento
             experiment_log = general.play_experiment(horizon)
+            print("Fine experiment {}".format(e))
+            print("len(experiment_log) = {}".format(len(experiment_log)))
 
             # memorizzo per ogni esperimento i beta parameters finali
-            self.beta_parameters_list.append(general.context_manager.contexts_set[0].learner.beta_parameters)
+            #self.beta_parameters_list.append(general.context_manager.contexts_set[0].learner.beta_parameters)
 
             # appendo le statistiche finali
             self.experiments_logs.append(experiment_log)
+        print("len(self.experiments_logs) =", len(self.experiments_logs))
         self.ran = True
     
     def plot_regret_nocontext(self):

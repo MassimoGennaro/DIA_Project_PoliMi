@@ -89,24 +89,30 @@ class Context():
         self.num_variables = 2
 
         self.rewards_log = logs
-        #self.rewards_log = []
-
-        #self.rewards_log = []
-
+        print("Creato context_id {}".format(context_id))
+        print("len(rewards_log) = {}".format(len(self.rewards_log)))
+        print("subspace = {}".format(self.subspace))
+        print("beta_parameters \n{}".format(self.learner.beta_parameters.astype(int)))
+        
+        
     def update(self, features_person, pulled_arm, reward):
         # Aggiorna i parametri beta del learner
         self.learner.update(pulled_arm, reward)
         #registro una lista delle reward, con essa devo effettuare la split
-        self.rewards_log.append((features_person, pulled_arm, reward))
+        new_log = (features_person, pulled_arm, reward)
+        self.rewards_log.append(new_log)
+        #print("contesto {} update n* {}".format(self.context_id, len(self.rewards_log)-1))
 
 
 
 #dal log toglie tutti i dati che riguardano una feature che NON vogliamo considerare
     def fetch_log(self, feature):
+        #print(feature, "feature")
         new_log = []
         for i in range(len(self.rewards_log)):
             if feature not in self.rewards_log[i][0]:
                 new_log.append(self.rewards_log[i])
+        #print(len(self.rewards_log), len(new_log), "log, fetch log senza feature")
         return new_log
 
 #dato un log calcola il learner derivante da quel log
@@ -236,6 +242,7 @@ class Context_Manager():
         self.n_arms = n_arms
         self.feature_space = feature_space
         # ogni assegnamento dello spazio è gestito da un contesto
+        print("Context Manager creato")
         if contexts_known == True:
             self.features_context = {categories[i]:i for i in range(len(categories))}
             #{("y", "f"):0, ("a", "f"):1,  ("y", "u"):2}
@@ -243,7 +250,10 @@ class Context_Manager():
         else:
             self.features_context = {self.feature_space[i]:0 for i in range(len(feature_space))}
             #{("y", "f"):0, ("y", "u"):0, ("a", "f"):0, ("a", "u"):0 }
-            self.contexts_set = {0:Context(0, feature_space, TS_Learner_candidate(n_arms))}
+            # Istanzio il nuovo contesto 0, con id 0 e rewards_log iniziale vuoto
+            rewards_log_start = []
+            context_start = Context(0, feature_space, TS_Learner_candidate(n_arms), rewards_log_start)
+            self.contexts_set = {0:context_start}
 
         # week se diverso da -1 effettua split ogni week (e.g. week=5 il giorno 4 splitta)
         self.week = week
@@ -276,6 +286,7 @@ class Context_Manager():
     def split(self, time, candidates_values):
     	# effettuo split se week!=1 ed è t corrisponde
         if (self.week != -1) and ((time+1)%self.week == 0):
+            print(time)
 
             # copio insieme dei contesti attuale            
             contexts_set_copy = self.contexts_set.copy()
@@ -322,6 +333,8 @@ class Context_Manager():
                     compl_feature_1 = [x for x in context.subspace if feature not in x]
                     # compl_feature_1 sottospazio CON la feature
                     compl_feature_2 = [x for x in context.subspace if feature in x]
+
+                    #print(feature, compl_feature_1, compl_feature_2)
                     
                     # nuovo sotto-contesto, nuovo numero, subspace SENZA feature, suo learner
                     #contexts_set_copy[number] = Context(number, compl_feature_1, split[3])
@@ -333,7 +346,12 @@ class Context_Manager():
                     # NEW! i nuovi contesti ora hanno i learner associati correttamente con i contesti#
                     # nuovo sotto-contesto, nuovo numero, subspace SENZA feature, suo learner
                     log_1 = context.fetch_log(feature)
-                    log_2 = context.fetch_log(complementary_feature(context.fetch_log(feature)))
+                    #log_2 = context.fetch_log(complementary_feature(context.fetch_log(feature)))
+                    log_2 = context.fetch_log(complementary_feature(feature))
+                    #print(feature, complementary_feature(feature))
+                    #print(len(log_1), "log 1")
+                    #print(len(log_2), "log 2")
+                    #print(len(context.rewards_log), "log tot")
 
                     contexts_set_copy[number] = Context(number, compl_feature_1, learner_1, log_1) #context.rewards_log
                     # aggiorno contesto padre con il numero del padre, subspace CON feature, suo learner
@@ -345,7 +363,13 @@ class Context_Manager():
                     #viene eliminato il contesto padre e inseriti due nuovi contesti, che sono complementari nello spazio delle feature tra di loro rispetto al padre
                     #number = len(contexts_set_copy.items())
 
+            
             self.contexts_set = contexts_set_copy
+            for i, c in self.contexts_set.items():
+                print("context {}".format(i))
+                print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
+                print("context.subspace = {}".format(c.subspace))
+                print("context.learner.beta_parameters = \n{}".format(c.learner.beta_parameters.astype(int)))
 
             # aggiorna self.features_context con l'indice del contesto corretto
             for context in self.contexts_set.values():
@@ -410,7 +434,8 @@ class General():
             # nuova persona
             category_person = self.person_manager.new_person()
             features_person = self.person_manager.categories[category_person]
-            #print(features_person) ####################
+            #print("persona {}, category {}".format(t, features_person))
+            
             # candidates
             candidates_values = self.environment.arms_candidates
             # scelgo arm
@@ -429,8 +454,15 @@ class General():
             #NEW! 
             self.rewards_log.append([category_person, pulled_arm, reward_person, valore_atteso_arm])
             #self.rewards_log.append([category_person, pulled_arm, reward_person])
+        
+        
 
-
+        for i, c in self.context_manager.contexts_set.items():
+            print("\ncontext {}".format(i))
+            print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
+            print("context.subspace = {}".format(c.subspace))
+            print("context.learner.beta_parameters = \n{}".format(c.learner.beta_parameters.astype(int)))
+            
         return self.rewards_log
 
     def run_pricing_experiment(self, n_categories_clicks):
