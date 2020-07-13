@@ -68,9 +68,9 @@ class Experiment_4_5:
 
             # general itera per t round, restituendo le statistiche finali dell'esperimento
             experiment_log = general.play_experiment(horizon)
-            print("Fine experiment {}".format(e))
+            print("Fine experiment {}".format(e+1))
             print("len(experiment_log) = {}".format(len(experiment_log)))
-
+            print("--------------------")
             # memorizzo per ogni esperimento i beta parameters finali
             #self.beta_parameters_list.append(general.context_manager.contexts_set[0].learner.beta_parameters)
 

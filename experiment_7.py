@@ -137,9 +137,9 @@ class Experiment_7:
         # c_manager.add_context() crea un contesto della categoria passata
         for i in range(len(self.categories)):
             
-            c_manager.add_context(self.categories[i])
-            c_manager.add_context(self.categories[i])
-            c_manager.add_context(self.categories[i])
+            c_manager.add_context(self.categories[i],print_init=False)
+            c_manager.add_context(self.categories[i],print_init=False)
+            c_manager.add_context(self.categories[i],print_init=False)
         
         # general gestisce la logica
         general = General(p_manager, c_manager, environment)

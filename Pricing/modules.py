@@ -76,7 +76,7 @@ class Person_Manager():
 # se la persona appartiene al suo contesto, se ne occupa il suo learner
 # un contesto insieme di tuple, ciascuna un elemento dello spazio delle features
 class Context():
-    def __init__(self, context_id, subspace, learner, logs=[]):
+    def __init__(self, context_id, subspace, learner, logs=[], print_init=True):
         # ogni contesto viene identificato progressivamente da un id
         self.context_id = context_id
 
@@ -89,10 +89,11 @@ class Context():
         self.num_variables = 2
 
         self.rewards_log = logs
-        print("Creato context_id {}".format(context_id))
-        print("len(rewards_log) = {}".format(len(self.rewards_log)))
-        print("subspace = {}".format(self.subspace))
-        print("beta_parameters \n{}".format(self.learner.beta_parameters.astype(int)))
+        if (print_init):
+            print("Creato context_id {}".format(context_id))
+            print("len(rewards_log) = {}".format(len(self.rewards_log)))
+            print("subspace = {}".format(self.subspace))
+            print("beta_parameters \n{}".format(self.learner.beta_parameters.astype(int)))
         
         
     def update(self, features_person, pulled_arm, reward):
@@ -261,9 +262,9 @@ class Context_Manager():
         self.time = 0
 
 
-    def add_context(self, subspace):
+    def add_context(self, subspace, print_init = True):
         new_id = len(self.contexts_set)
-        self.contexts_set[new_id] = Context(new_id, subspace, TS_Learner_candidate(self.n_arms))
+        self.contexts_set[new_id] = Context(new_id, subspace, TS_Learner_candidate(self.n_arms), print_init=print_init)
         for t in subspace:
             self.features_context[t] = new_id
 
