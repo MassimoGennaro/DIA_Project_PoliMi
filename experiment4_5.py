@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
+import pandas as pd
+import ipywidgets as widgets
+from IPython import display
+
 from Pricing.learner import *
 from Pricing.modules import *
 from Pricing.Pricing_Config_Manager import *
@@ -22,6 +26,9 @@ class Experiment_4_5:
         self.beta_parameters_list = []
         
         self.ran = False
+
+        self.subspace_sequences = []
+
         
     def run_clairvoyant(self):
         # per ogni categoria calcolo il valore atteso di ogni arm
@@ -42,7 +49,7 @@ class Experiment_4_5:
         
         return best_exp_value
     
-    def run_experiment(self, n_experiments, horizon, week = -1, beta_graph=False):
+    def run_experiment(self, n_experiments, horizon, week = -1, beta_graph=False, context_graph=False):
         '''
         default week = -1
         if week > 0 performs context generation
@@ -51,6 +58,7 @@ class Experiment_4_5:
         # per il grafico della regret, faccio la regret cumulativa di ognuno
         # e calcolo la media su n experiment.
         # ma experiments_logs ad ogni run deve prima essere svuotato, poi riusato.
+        self.subspace_sequences = []
         self.experiments_logs = []
         self.week = week
         self.beta_graph = beta_graph
@@ -69,6 +77,10 @@ class Experiment_4_5:
 
             # general itera per t round, restituendo le statistiche finali dell'esperimento
             experiment_log = general.play_experiment(horizon)
+
+            if context_graph:
+                display.display(self.plot_contexts_graph(general.context_manager.subspace_sequence))
+
             # memorizzo per ogni esperimento i beta parameters finali
             self.beta_parameters_list.append(general.context_manager.contexts_set[0].learner.beta_parameters)
 
@@ -100,7 +112,49 @@ class Experiment_4_5:
         
         #print("len(self.experiments_logs) =", len(self.experiments_logs))
         self.ran = True
-    
+
+    def plot_contexts_graph(self, subspace_sequence):
+        def get_dataframe(table, features, colors=['cornflowerblue', 'darkorange', 'forestgreen', 'firebrick']):
+            def highlight(s, colors):
+                '''
+                highlight the maximum in a Series yellow.
+                '''
+                return ['background-color: ' + colors[v] for v in s]
+
+            features_values = [i for i in features.values()]
+            features_keys = [i for i in features.keys()]
+            df = pd.DataFrame(data=table,
+                              index=[[features_keys[0]] * 2, features_values[0]],
+                              columns=[[features_keys[1]] * 2, features_values[1]]
+                              )
+            df = df.style.apply(highlight, colors=colors)
+            return df
+
+        features_values = [i for i in self.features.values()]
+
+        data = {}
+
+        for t in subspace_sequence.keys():
+            data[t] = []
+            for r, row in enumerate(features_values[0]):
+                data[t].append([])
+                for c, column in enumerate(features_values[1]):
+                    data[t][r].append(subspace_sequence[t][tuple([row, column])])
+
+        wids = []
+        for i, t in enumerate(subspace_sequence.keys()):
+            df = get_dataframe(data[t], self.features)
+
+            wids.append(widgets.Output())  # create output widgets
+            with wids[i]:
+                display.display(df)  # render in output widgets
+                print("splitting at "+str(t))
+
+        # create HBox
+        hbox = widgets.HBox(wids)
+
+        return hbox
+
     def plot_regret_aggregated(self):
         if not self.ran:
             return "Run the experiment before plotting"

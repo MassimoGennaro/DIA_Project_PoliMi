@@ -261,6 +261,8 @@ class Context_Manager():
         # time va aggiornato ad ogni nuova persona
         self.time = 0
 
+        self.subspace_sequence = {}
+
 
     def add_context(self, subspace, print_init = True):
         new_id = len(self.contexts_set)
@@ -287,8 +289,8 @@ class Context_Manager():
     def split(self, time, candidates_values):
     	# effettuo split se week!=1 ed è t corrisponde
         if (self.week != -1) and ((time+1)%self.week == 0):
-            print("----------------")
-            print("Splitting at: {}".format(time))
+            #print("----------------")
+            #print("Splitting at: {}".format(time))
 
             # copio insieme dei contesti attuale            
             contexts_set_copy = self.contexts_set.copy()
@@ -367,13 +369,13 @@ class Context_Manager():
 
             
             self.contexts_set = contexts_set_copy
-            print("Contexts after splitting:")
+            """print("Contexts after splitting:")
             for i, c in self.contexts_set.items():
                 
                 print("Context {}".format(i))
                 #print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
                 print("Features subspace in context {} = {}".format(i,c.subspace))
-                print("Beta parameters of context {} = \n{}".format(i,c.learner.beta_parameters.astype(int)))
+                print("Beta parameters of context {} = \n{}".format(i,c.learner.beta_parameters.astype(int)))"""
 
             # aggiorna self.features_context con l'indice del contesto corretto
             for context in self.contexts_set.values():
@@ -384,10 +386,13 @@ class Context_Manager():
                             self.features_context[key] = context.context_id
           
             # Elenca nuovi contesti
+            self.subspace_sequence[time] = {}
             for c in self.contexts_set.values():
-                print(c.context_id, c.subspace)
+                # print(c.context_id, c.subspace)
+                for e in c.subspace:
+                    self.subspace_sequence[time][e] = c.context_id
             else:
-                print("\n")
+                # print("\n")
             # TODO: perchè si ripete questo doppio for?
 
                 for tup in context.subspace:
