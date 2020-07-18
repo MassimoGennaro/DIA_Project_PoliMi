@@ -89,12 +89,12 @@ class Context():
         self.num_variables = 2
 
         self.rewards_log = logs
-        if (print_init):
-            print("Creato context_id {}".format(context_id))
-            print("len(rewards_log) = {}".format(len(self.rewards_log)))
-            print("subspace = {}".format(self.subspace))
-            print("beta_parameters \n{}".format(self.learner.beta_parameters.astype(int)))
-        
+        # if (print_init):
+        #     print("\n")
+        #     print("Create context: {}".format(context_id))
+        #     print("Features in the context: {}".format(self.subspace))
+        #     print("Beta parameters initialization:\n{}".format(self.learner.beta_parameters.astype(int)))
+            
         
     def update(self, features_person, pulled_arm, reward):
         # Aggiorna i parametri beta del learner
@@ -243,7 +243,7 @@ class Context_Manager():
         self.n_arms = n_arms
         self.feature_space = feature_space
         # ogni assegnamento dello spazio è gestito da un contesto
-        print("Context Manager creato")
+        #print("Context Manager creato")
         if contexts_known == True:
             self.features_context = {categories[i]:i for i in range(len(categories))}
             #{("y", "f"):0, ("a", "f"):1,  ("y", "u"):2}
@@ -287,7 +287,8 @@ class Context_Manager():
     def split(self, time, candidates_values):
     	# effettuo split se week!=1 ed è t corrisponde
         if (self.week != -1) and ((time+1)%self.week == 0):
-            print(time)
+            print("----------------")
+            print("Splitting at: {}".format(time))
 
             # copio insieme dei contesti attuale            
             contexts_set_copy = self.contexts_set.copy()
@@ -366,11 +367,13 @@ class Context_Manager():
 
             
             self.contexts_set = contexts_set_copy
+            print("Contexts after splitting:")
             for i, c in self.contexts_set.items():
-                print("context {}".format(i))
-                print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
-                print("context.subspace = {}".format(c.subspace))
-                print("context.learner.beta_parameters = \n{}".format(c.learner.beta_parameters.astype(int)))
+                
+                print("Context {}".format(i))
+                #print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
+                print("Features subspace in context {} = {}".format(i,c.subspace))
+                print("Beta parameters of context {} = \n{}".format(i,c.learner.beta_parameters.astype(int)))
 
             # aggiorna self.features_context con l'indice del contesto corretto
             for context in self.contexts_set.values():
@@ -458,11 +461,11 @@ class General():
         
         
 
-        for i, c in self.context_manager.contexts_set.items():
-            print("\ncontext {}".format(i))
-            print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
-            print("context.subspace = {}".format(c.subspace))
-            print("context.learner.beta_parameters = \n{}".format(c.learner.beta_parameters.astype(int)))
+        # for i, c in self.context_manager.contexts_set.items():
+        #     print("\ncontext {}".format(i))
+        #     print("len(context.rewards_log) = {}".format(len(c.rewards_log)))
+        #     print("context.subspace = {}".format(c.subspace))
+        #     print("context.learner.beta_parameters = \n{}".format(c.learner.beta_parameters.astype(int)))
             
         return self.rewards_log
 

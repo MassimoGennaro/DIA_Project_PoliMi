@@ -23,7 +23,7 @@ class Experiment_4_5:
         
         self.ran = False
         
-    def run_clairvoyant_context(self):
+    def run_clairvoyant(self):
         # per ogni categoria calcolo il valore atteso di ogni arm
         exp_values_categories = np.multiply(self.p_categories, self.arms_candidates)
         # per ogni categoria trovo il valore atteso del best arm
@@ -34,7 +34,7 @@ class Experiment_4_5:
 
         return best_exp_value_categories
     
-    def run_clairvoyant_nocontext(self):
+    def run_clairvoyant_aggregated(self):
         # per ogni categoria calcolo il valore atteso di ogni arm aggregando le tre classi
         exp_values_categories = np.mean(np.multiply(self.p_categories, self.arms_candidates),axis=0)
         
@@ -42,7 +42,7 @@ class Experiment_4_5:
         
         return best_exp_value
     
-    def run_experiment(self, n_experiments, horizon, week = -1):
+    def run_experiment(self, n_experiments, horizon, week = -1, beta_graph=False):
         '''
         default week = -1
         if week > 0 performs context generation
@@ -53,6 +53,7 @@ class Experiment_4_5:
         # ma experiments_logs ad ogni run deve prima essere svuotato, poi riusato.
         self.experiments_logs = []
         self.week = week
+        self.beta_graph = beta_graph
         for e in range(n_experiments):
             print("Performing experiment: {}".format(e+1))
             # ad ogni experiment creiamo un nuovo Environment
@@ -68,18 +69,39 @@ class Experiment_4_5:
 
             # general itera per t round, restituendo le statistiche finali dell'esperimento
             experiment_log = general.play_experiment(horizon)
-            print("Fine experiment {}".format(e+1))
-            print("len(experiment_log) = {}".format(len(experiment_log)))
-            print("--------------------")
             # memorizzo per ogni esperimento i beta parameters finali
-            #self.beta_parameters_list.append(general.context_manager.contexts_set[0].learner.beta_parameters)
+            self.beta_parameters_list.append(general.context_manager.contexts_set[0].learner.beta_parameters)
 
             # appendo le statistiche finali
             self.experiments_logs.append(experiment_log)
-        print("len(self.experiments_logs) =", len(self.experiments_logs))
+        
+        if(beta_graph):
+            x_ticks = tuple(self.arms_candidates)
+            x_1 = self.arms_candidates
+            beta_exp = self.beta_parameters_list[0]
+            opt_exp_values = np.mean(np.multiply(self.p_categories, self.arms_candidates),axis=0)
+            print(opt_exp_values)
+            y_1 = []
+            ci = []
+            for index,(alfa,beta) in enumerate(beta_exp):
+                arm = self.arms_candidates[index]
+                exp_value = alfa/(alfa+beta)
+                y_1.append(exp_value*arm)
+                variance = (alfa*beta)/((alfa+beta)**2*(alfa+beta+1))
+                ci.append((arm)*(1.96*variance))
+            
+            plt.figure(0)
+            plt.ylabel("Expected Reward (price * conversion_rate)")
+            plt.xlabel("Prices")
+            plt.errorbar(x_1,y_1,ci,capsize=7,linestyle="None", marker="o", markersize=1, mfc="blue", mec="blue")
+            plt.scatter(x_1,opt_exp_values,marker="x",c="r")
+            plt.show()
+            
+        
+        #print("len(self.experiments_logs) =", len(self.experiments_logs))
         self.ran = True
     
-    def plot_regret_nocontext(self):
+    def plot_regret_aggregated(self):
         if not self.ran:
             return "Run the experiment before plotting"
         total_regret_list = []
@@ -87,7 +109,7 @@ class Experiment_4_5:
         # meno valore atteso dell'arm scelto per tale categoria
         exp_values_categories = np.mean(np.multiply(self.p_categories, self.arms_candidates),axis=0)
         n_experiments = len(self.experiments_logs)
-        best_exp_value = self.run_clairvoyant_nocontext()
+        best_exp_value = self.run_clairvoyant_aggregated()
         
         for e in range(n_experiments):
             #print("experiment: {}".format(e))
@@ -116,10 +138,10 @@ class Experiment_4_5:
         plt.ylabel("Cumulative Regret in t")
         plt.xlabel("t")
         plt.plot(average_regret_list, 'r')
-        plt.legend(["Regret TS"])
+        plt.legend(["Regret TS aggregated clairvoyant"])
         plt.show()
         
-    def plot_regret_context(self):
+    def plot_regret(self, comparison = False):
         if not self.ran:
             return "Run the experiment before plotting"
         total_regret_list = []
@@ -131,7 +153,7 @@ class Experiment_4_5:
         exp_values_categories = np.multiply(self.p_categories, self.arms_candidates)
 
 
-        best_exp_value_categories = self.run_clairvoyant_context()
+        best_exp_value_categories = self.run_clairvoyant()
         
         for e in range(n_experiments):
             #print("experiment: {}".format(e))
@@ -161,7 +183,7 @@ class Experiment_4_5:
         plt.ylabel("Cumulative Regret in t")
         plt.xlabel("t")
         plt.plot(average_regret_list, 'r')
-        plt.legend(["Regret TS with Context Generation"])
+        plt.legend(["Regret TS"])
         plt.show()
 
     def plot_reward(self):
@@ -182,10 +204,7 @@ class Experiment_4_5:
         plt.xlabel("t")
         plt.plot(avg_reward_exp, 'r')
         plt.scatter(len(avg_reward_exp),np.max(avg_reward_exp))
+        plt.annotate(np.max(avg_reward_exp),(len(avg_reward_exp),np.max(avg_reward_exp)),arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), xytext=(len(avg_reward_exp)-1000,np.max(avg_reward_exp)-10000))
         plt.legend(["Reward"])
         plt.show()
-        print(avg_reward_exp[48], 48)
-        print(avg_reward_exp[50], 50)
-        print(avg_reward_exp[60], 60)
-        print(avg_reward_exp[70], 70)
-        print(np.max(avg_reward_exp))
