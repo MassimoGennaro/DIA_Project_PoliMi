@@ -27,8 +27,6 @@ class Experiment_4_5:
         
         self.ran = False
 
-        self.subspace_sequences = []
-
         
     def run_clairvoyant(self):
         # per ogni categoria calcolo il valore atteso di ogni arm
@@ -58,7 +56,6 @@ class Experiment_4_5:
         # per il grafico della regret, faccio la regret cumulativa di ognuno
         # e calcolo la media su n experiment.
         # ma experiments_logs ad ogni run deve prima essere svuotato, poi riusato.
-        self.subspace_sequences = []
         self.experiments_logs = []
         self.week = week
         self.beta_graph = beta_graph
