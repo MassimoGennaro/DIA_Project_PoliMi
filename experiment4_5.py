@@ -56,6 +56,7 @@ class Experiment_4_5:
         # per il grafico della regret, faccio la regret cumulativa di ognuno
         # e calcolo la media su n experiment.
         # ma experiments_logs ad ogni run deve prima essere svuotato, poi riusato.
+
         self.experiments_logs = []
         self.week = week
         self.beta_graph = beta_graph
