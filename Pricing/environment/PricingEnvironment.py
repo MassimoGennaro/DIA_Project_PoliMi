@@ -1,13 +1,9 @@
 import numpy as np
 
-##### ENVIRONMENT #####
-# contiene informazioni sui candidati e probabilità.
-# le probabilità di ogni categoria possono variare se variano le fasi
 
-# quando t avanza di tempo, può cambiare fase.
 class Personalized_Environment():
     """
-
+    it contains info about sui cadnidates and theirs probabilities.
     """
 
     def __init__(self, arms_candidates, probabilities):
@@ -18,8 +14,9 @@ class Personalized_Environment():
         self.time = 0
 
 
-    # rende la reward del candidato in base alla [phase][category][arm]
+   
     def round(self, p_category, pulled_arm):
+         # returns the reward of the arm chosen 
 
         p = self.probabilities[p_category][pulled_arm]
         reward = np.random.binomial(1, p)

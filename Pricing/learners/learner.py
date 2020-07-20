@@ -20,7 +20,7 @@ class Learner:
         self.rewards_per_arm[pulled_arm].append(reward)
         self.collected_rewards = np.append(self.collected_rewards,reward)
 
-########################################
+
 
 
 class TS_Learner(Learner):
@@ -80,10 +80,13 @@ class TS_Learner(Learner):
         # NEW!
         #minus = -pow(-math.log(succ_arm * (1-succ_arm)) / (2 * (self.t)), 0.5) 
         return exp_value - minus
-########################################
+
 
 
 class TS_Learner_candidate(TS_Learner):
+    '''
+    Learner that chooses the best arm, given the expected value sampled
+    '''
     def __init__(self, n_arms):
         super().__init__(n_arms)
         # parto per ogni arm con avere valore atteso uguale a 0.
@@ -91,8 +94,12 @@ class TS_Learner_candidate(TS_Learner):
         self.exp_value_arm = {i:0 for i in range(n_arms)}
 
 
-    # devo scegliere l'arm in base al valore atteso fino a questo turno!
+    
     def pull_arm(self, candidates_values):
+        '''
+        sample the arms, choose what it has the best sampled expected value
+        '''
+
         # effettuo samples delle beta normale
         beta_samples = np.random.beta(self.beta_parameters[:,0],self.beta_parameters[:,1])
 
@@ -105,6 +112,9 @@ class TS_Learner_candidate(TS_Learner):
         return idx
     
     def update(self, pulled_arm, reward):
+        '''
+        update the beta parameters given the reward
+        '''
         self.t += 1
         esito = 0
         # se reward è positiva, è un successo. Altrimento è insuccesso
@@ -117,7 +127,11 @@ class TS_Learner_candidate(TS_Learner):
         self.beta_parameters[pulled_arm, 0] = self.beta_parameters[pulled_arm,0] + esito
         self.beta_parameters[pulled_arm, 1] = self.beta_parameters[pulled_arm,1] + 1.0 - esito
 
-    # aggiorno la funzione per considerare la media di ogni arm.
+    
+
     def update_observations(self, pulled_arm, reward):
+        '''
+        update the rewards log with the reward
+        '''
         self.rewards_per_arm[pulled_arm].append(reward)
         self.collected_rewards = np.append(self.collected_rewards, reward)

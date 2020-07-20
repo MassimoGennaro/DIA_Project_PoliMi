@@ -2,6 +2,9 @@ from Pricing.learners.learner import TS_Learner_candidate
 import numpy as np
 
 def complementary_feature(feature):
+    '''
+    this function serves to find the opposite value of a variable, given a value
+    '''
     features_set = (("y", "a"),("f", "u"))
     for variable in features_set:
         if feature in variable:
@@ -10,23 +13,22 @@ def complementary_feature(feature):
                     return f
 
 
-# ogni contesto si occupa di un sottoinsieme dello spazio delle features
-# se la persona appartiene al suo contesto, se ne occupa il suo learner
-# un contesto insieme di tuple, ciascuna un elemento dello spazio delle features
+
 class Context():
     """
-
+    a context is assigned to a sub-set of the feature space.
+    each user of that sub-set is managed by the learner of the corresponding context
     """
 
     def __init__(self, context_id, subspace, learner, logs=[], print_init=True):
-        # ogni contesto viene identificato progressivamente da un id
+        # context id
         self.context_id = context_id
 
-        # variables è il sottospazio delle feature di cui si occupa il contesto
-        # è una lista di tuple lunghe quanto il numero di variabili. (e.g. {(y,f), (y,u)})
+        # sub-set of the feature spce
+        # set of tuples of values, for each variable (e.g. {(y,f), (y,u)})
         self.subspace = subspace
 
-        # ad ogni contesto è associato un relativo learner
+        # each context contains a learner
         self.learner = learner
         self.num_variables = 2
 
@@ -38,16 +40,21 @@ class Context():
         #     print("Beta parameters initialization:\n{}".format(self.learner.beta_parameters.astype(int)))
 
     def update(self, features_person, pulled_arm, reward):
-        # Aggiorna i parametri beta del learner
+        '''
+        updates the learner's beta parameters
+        '''
         self.learner.update(pulled_arm, reward)
-        # registro una lista delle reward, con essa devo effettuare la split
+        # update the rewards log
         new_log = (features_person, pulled_arm, reward)
         self.rewards_log.append(new_log)
         # print("contesto {} update n* {}".format(self.context_id, len(self.rewards_log)-1))
 
-    # dal log toglie tutti i dati che riguardano una feature che NON vogliamo considerare
+    
     def fetch_log(self, feature):
-
+        '''
+        returns the list of the rewards of the users that don't have that feature.
+        used for the context split
+        '''
         new_log = []
         for i in range(len(self.rewards_log)):
             if feature not in self.rewards_log[i][0]:
@@ -55,15 +62,23 @@ class Context():
         # print(len(self.rewards_log), len(new_log), "log, fetch log senza feature")
         return new_log
 
-    # dato un log calcola il learner derivante da quel log
+    
     def learner_sub_context(self, log, candidates_values):
+        '''
+        given a log of rewards, returns a learner trained with it
+        '''
         new_learner = TS_Learner_candidate(self.learner.n_arms)
         for i in range(len(log)):
             new_learner.update(log[i][1], log[i][2])
         return new_learner
 
-    # verifica che la split condition sia verificata e nel caso restituisce una tupla con (feature, val_after_split, lerner  sub contesto 1, lerner  sub contesto 2)
+    
     def split_condition(self, feature, candidates_values):
+        '''
+        calculate the split condition, if it's verified returns
+        (feature, val_after_split, lerner  sub contesto 1, lerner  sub contesto 2)
+
+        '''
         ris = []
         val_after_split = self.val_after_split(feature, candidates_values)
         if val_after_split[0] > self.learner.best_arm_lower_bound(candidates_values):
@@ -72,6 +87,9 @@ class Context():
         return ris
 
     def split(self, candidates_values):
+        '''
+        checks if the context can be split
+        '''
         # considero il learner e calcolo il valore atteso del best arm
 
         # Per ogni variabile, calcolo il valore atteso del best arm per i possibili valori
@@ -80,8 +98,10 @@ class Context():
 
         # split per i quali la split condition è soddisfatta, poi dovrò scecgliere il miglior candidato
         candidate_split = []
+
         # lista valori possibili in questo contesto di ogni variabile (1 o 2)
         count_var_values = [[] for x in range(self.num_variables)]
+
         # per ogni elemento del subspace del contesto
         for t in self.subspace:
 
@@ -91,7 +111,6 @@ class Context():
                     count_var_values[var].append(t[var])
 
         # scelgo solo variabili con almeno due valori diversi, con mask di 0 e 1
-
         # ottengo quanti valori diversi della variabile si occupa il contesto
         # scelgo solo le variabili del contesto con almeno due valori diversi, con 1 o 0
 
@@ -121,12 +140,16 @@ class Context():
         else:
             return candidate_split
 
-    # Data feature da splittare, calcola i valori di expected reward POST split.
-    # è a sinistra nella split condition
+    
     def val_after_split(self, feature, candidates_values):
+        '''
+        Calculates the expected reward POST split.
+        '''
+
         # divido il log secondo tale feature
         # sub-1 è log dei dati con feature negata
         sub_1 = self.fetch_log(feature)
+
         # sub-1 è log dei dati con feature positiva
         sub_2 = self.fetch_log(complementary_feature(feature))
 
@@ -160,10 +183,12 @@ class Context():
         return ris
 
 
-# Context_Manager si occupa della gestione dei context-learner
-# feature_space = [("y", "f"), ("y", "u"),("a", "f"),("a", "u")]
+
 
 class Context_Manager():
+    '''
+    Manages the allocation and split of the contexts
+    '''
     def __init__(self, n_arms, feature_space, categories, candidates, week=-1, contexts_known=False):
         # feature space è lista di tuple di dimensione pari al numero di variabili
         # feature space è l'unione di tutti i possibili contesti
@@ -191,12 +216,18 @@ class Context_Manager():
         self.subspace_sequence = {}
 
     def add_context(self, subspace, print_init=True):
+        '''
+        manually adds a new context, with a given subspace
+        '''
         new_id = len(self.contexts_set)
         self.contexts_set[new_id] = Context(new_id, subspace, TS_Learner_candidate(self.n_arms), print_init=print_init)
         for t in subspace:
             self.features_context[t] = new_id
 
     def select_arm(self, person_category, time, candidates_values):
+        '''
+        returns the arm's candidate to propose to the person
+        '''
         self.time = time
         self.split(self.time, candidates_values)
 
@@ -209,8 +240,13 @@ class Context_Manager():
         # print()
         return selected_arm
 
-    # split alla fine di una week, considera ogni contesto per vedere se effettuare lo split
+    
     def split(self, time, candidates_values):
+        '''
+        at each week, checks the split condition of each context, for each different variable.
+        if the context it's splittable, splits it with the best variable
+        '''
+
         # effettuo split se week!=1 ed è t corrisponde
         if (self.week != -1) and ((time + 1) % self.week == 0):
             # print("----------------")
@@ -304,12 +340,18 @@ class Context_Manager():
             pass
 
     def update_context(self, features_person, pulled_arm, reward):
+        '''
+        given the reward, arm and features, update the corresponding context
+        '''
         # ottengo l'id del contesto dalle feature della persona
         context_id = self.features_context[features_person]
         # chiamo update del learner del contesto
         self.contexts_set[context_id].update(features_person, pulled_arm, reward)
 
     def val_att_arm(self, features_person, pulled_arm, candidates_values):
+        '''
+        returns the expected value of the arm of a given context
+        '''
         # ottengo l'id del contesto dalle feature della persona
         context_id = self.features_context[features_person]
         alpha = self.contexts_set[context_id].learner.beta_parameters[pulled_arm][0]
