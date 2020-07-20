@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 class Experiment_7:
-    def __init__(self, max_budget=5.0, n_arms=6, pricing_env_id = 0, advertising_env_id = 0):
+    def __init__(self, max_budget=5.0, n_arms=6, pricing_env_id = 0, advertising_env_id = 0, alt_clairvoyant=False):
         ## ADVERTISING ##
         
         # Budget settings
@@ -49,7 +49,13 @@ class Experiment_7:
 
         
         ## Clairvoyant optimal reward ##
-        self.opt_super_arm_reward = self.run_clairvoyant()
+        self.alt_clairvoyant=alt_clairvoyant
+        if self.alt_clairvoyant:
+            self.opt_super_arm_reward = self.run_clairvoyant_alt()
+        else:
+            self.opt_super_arm_reward = self.run_clairvoyant()
+            
+        
 
         ## Rewards for each experiment (each element is a list of T rewards)
         self.opt_rewards_per_experiment = []
@@ -58,6 +64,10 @@ class Experiment_7:
         self.ran = False
 
     def run_clairvoyant_alt(self):
+        """
+        Clairvoyant Solution
+        :return: list of optimal super-arm reward performing the algorithm of point 6
+        """
         opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)
         for feature_label in self.feature_labels:
             opt_env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
@@ -81,7 +91,7 @@ class Experiment_7:
     def run_clairvoyant(self):
         """
         Clairvoyant Solution
-        :return: list of optimal super-arm reward for each phase
+        :return: list of optimal super-arm reward performing the same algorithm 
         """
 
         opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)
