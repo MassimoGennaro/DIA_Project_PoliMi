@@ -2,11 +2,14 @@ from Advertising.environment.Advertising_Config_Manager import *
 from Advertising.environment.CampaignEnvironment import *
 from Advertising.learners.Subcampaign_Learner import *
 from Advertising.knapsack.knapsack import *
-from Pricing.modules import *
-from Pricing.Pricing_Config_Manager import *
+from Pricing.environment.PricingEnvironment import *
+from Pricing.environment.Pricing_Config_Manager import *
+from Pricing.modules.Experiment_Manager import *
+from Pricing.modules.Person_Manager import *
+from Pricing.modules.Context_Manager import *
+
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 class Experiment_6:
     def __init__(self, max_budget=5.0, n_arms=6, pricing_env_id = 0, advertising_env_id = 0):

@@ -2,12 +2,14 @@ from Advertising.environment.Advertising_Config_Manager import *
 from Advertising.environment.CampaignEnvironment import *
 from Advertising.learners.Subcampaign_Learner import *
 from Advertising.knapsack.knapsack import *
-from Pricing.modules import *
-from Pricing.Pricing_Config_Manager import *
+from Pricing.environment.Pricing_Config_Manager import *
+from Pricing.environment.PricingEnvironment import *
+from Pricing.modules.Person_Manager import *
+from Pricing.modules.Context_Manager import *
+from Pricing.modules.Experiment_Manager import *
+
 import numpy as np
 import matplotlib.pyplot as plt
-
-
 class Experiment_7:
     def __init__(self, max_budget=5.0, n_arms=6, pricing_env_id = 0, advertising_env_id = 0, alt_clairvoyant=False):
         ## ADVERTISING ##
@@ -49,13 +51,11 @@ class Experiment_7:
 
         
         ## Clairvoyant optimal reward ##
-        self.alt_clairvoyant=alt_clairvoyant
+        self.alt_clairvoyant = alt_clairvoyant
         if self.alt_clairvoyant:
             self.opt_super_arm_reward = self.run_clairvoyant_alt()
         else:
             self.opt_super_arm_reward = self.run_clairvoyant()
-            
-        
 
         ## Rewards for each experiment (each element is a list of T rewards)
         self.opt_rewards_per_experiment = []
@@ -68,6 +68,7 @@ class Experiment_7:
         Clairvoyant Solution
         :return: list of optimal super-arm reward performing the algorithm of point 6
         """
+
         opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)
         for feature_label in self.feature_labels:
             opt_env.add_subcampaign(label=feature_label, functions=self.click_functions[feature_label])
@@ -91,7 +92,7 @@ class Experiment_7:
     def run_clairvoyant(self):
         """
         Clairvoyant Solution
-        :return: list of optimal super-arm reward performing the same algorithm 
+        :return: list of optimal super-arm reward performing the same algorithm
         """
 
         opt_env = Campaign(self.budgets, phases=self.phase_labels, weights=self.phase_weights)

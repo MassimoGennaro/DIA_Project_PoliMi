@@ -1,15 +1,15 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import json
-
+import numpy as np
 import pandas as pd
 import ipywidgets as widgets
 from IPython import display
 
-from Pricing.learner import *
-from Pricing.modules import *
-from Pricing.Pricing_Config_Manager import *
-#from .utils_functions import *
+from Pricing.environment.PricingEnvironment import *
+from Pricing.environment.Pricing_Config_Manager import *
+from Pricing.modules.Person_Manager import *
+from Pricing.modules.Context_Manager import *
+from Pricing.modules.Experiment_Manager import *
+
 
 class Experiment_4_5:
     def __init__(self, id):
@@ -47,7 +47,7 @@ class Experiment_4_5:
         
         return best_exp_value
     
-    def run_experiment(self, n_experiments, horizon, week = -1, context_graph=False):
+    def run_experiment(self, n_experiments, horizon, week=-1, context_graph=False):
         '''
         default week = -1
         if week > 0 performs context generation
@@ -59,7 +59,7 @@ class Experiment_4_5:
 
         self.experiments_logs = []
         self.week = week
-        self.beta_graph = beta_graph
+
         for e in range(n_experiments):
             print("Performing experiment: {}".format(e+1))
             # ad ogni experiment creiamo un nuovo Environment
