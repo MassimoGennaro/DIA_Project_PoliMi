@@ -112,10 +112,6 @@ class Experiment_7:
         opt_super_arm = super_arm_candidates[idx]
         
         
-        # real_expected_values = [max(expected_values[i]) for i in range(len(expected_values))]
-        
-        # real_values = [[real_expected_values[a]*real_click_values[a][b] for b in range(self.n_arms)] for a in range(len(real_expected_values))]
-        # opt_super_arm = knapsack_optimizer(real_values)
 
         opt_super_arm_reward = 0
         for (subc_id, pulled_arm) in enumerate(opt_super_arm):
@@ -127,11 +123,11 @@ class Experiment_7:
 
     def create_general(self):
         
-        # Crea un pricing environment
+        
         environment = Personalized_Environment(self.arms_candidates, self.p_categories)
-        # utilizziamo un person_manager per gestire la creazione delle persone
+        
         p_manager = Person_Manager(self.categories, self.p_categories, self.features)
-        # utilizziamo un context_manager per gestire la gestione dei contesti e learner
+       
         c_manager = Context_Manager(self.n_arms_price, self.features_space,self.categories, self.arms_candidates, contexts_known=True)
         
         # c_manager.add_context() crea un contesto della categoria passata
@@ -224,7 +220,7 @@ class Experiment_7:
                 
                 idx = np.argmax(np.sum(best_knapsack_values, axis=1))
                 super_arm = super_arm_candidates[idx]
-                #print(super_arm,idx)
+                
                 
                 
                 # Knapsack return a list of pulled_arm
@@ -276,8 +272,7 @@ class Experiment_7:
         plt.plot(opt_exp, 'g', label='Optimal Reward')
         mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
         plt.plot(mean_exp, 'b', label='Expected Reward')
-        # for e in range(len(self.gpts_rewards_per_experiment)):
-        #     plt.plot(self.gpts_rewards_per_experiment[e], 'b', label='Expected Reward')
+        
 
         plt.legend(loc="lower right")
         plt.show()

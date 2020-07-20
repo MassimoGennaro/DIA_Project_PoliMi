@@ -69,8 +69,6 @@ class Person_Manager():
         self.categories_count[p_category] += 1
         return p_category
 
-    # def change_phase(self, probabilities):
-    #     self.probabilities = probabilities
 
 # ogni contesto si occupa di un sottoinsieme dello spazio delle features
 # se la persona appartiene al suo contesto, se ne occupa il suo learner
@@ -108,7 +106,7 @@ class Context():
 
 #dal log toglie tutti i dati che riguardano una feature che NON vogliamo considerare
     def fetch_log(self, feature):
-        #print(feature, "feature")
+        
         new_log = []
         for i in range(len(self.rewards_log)):
             if feature not in self.rewards_log[i][0]:

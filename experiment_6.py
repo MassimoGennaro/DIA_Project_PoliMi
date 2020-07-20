@@ -85,11 +85,11 @@ class Experiment_6:
 
     def create_general(self):
         
-        # Crea un pricing environment
+        
         environment = Personalized_Environment(self.arms_candidates, self.p_categories)
-        # utilizziamo un person_manager per gestire la creazione delle persone
+        
         p_manager = Person_Manager(self.categories, self.p_categories, self.features)
-        # utilizziamo un context_manager per gestire la gestione dei contesti e learner
+        
         c_manager = Context_Manager(self.n_arms_price, self.features_space, self.categories, self.arms_candidates, contexts_known=True)
         
         # c_manager.add_context() crea un contesto della categoria passata
@@ -213,8 +213,7 @@ class Experiment_6:
         plt.plot(opt_exp, 'g', label='Optimal Reward')
         mean_exp = np.mean(self.gpts_rewards_per_experiment, axis=0)
         plt.plot(mean_exp, 'b', label='Expected Reward')
-        # for e in range(len(self.gpts_rewards_per_experiment)):
-        #     plt.plot(self.gpts_rewards_per_experiment[e], 'b', label='Expected Reward')
+        
 
         plt.legend(loc="lower right")
         plt.show()
