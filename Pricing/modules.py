@@ -136,12 +136,8 @@ class Context():
         # considero il learner e calcolo il valore atteso del best arm
 
         # Per ogni variabile, calcolo il valore atteso del best arm per i possibili valori
-        # scelgo l'indice del best arm, [[[quello selezionato di più]]]--> NO!
-        #best_arm = np.argmax(np.sum(self.learner.beta_parameters, axis=1)) SBAGLIATO!!
-        #best arm è quello con miglior prodotto probabilità x value
         best_arm = self.learner.best_arm(candidates_values)
         # calcolo il suo valore atteso, deve essere usato per la split condition
-        #best_expected_value = best_expected_value(self.learner.beta_parameters, best_arm, candidates_values)
 
         #split per i quali la split condition è soddisfatta, poi dovrò scecgliere il miglior candidato
         candidate_split = []
@@ -194,7 +190,6 @@ class Context():
         # sub-1 è log dei dati con feature negata
         sub_1 = self.fetch_log(feature)
         # sub-1 è log dei dati con feature positiva
-        #sub_2 = [x for x in self.rewards_log if x not in sub_1]
         sub_2 = self.fetch_log(complementary_feature(feature))
 
         # devo trovare il value after split
@@ -216,7 +211,6 @@ class Context():
         # learn 1 considera log CON feature
         learn_2 = self.learner_sub_context(sub_2, candidates_values)
 
-        # NEW!
         # aggiorno il t dei nuovi learner
         learn_1.t = actual_t
         learn_2.t = actual_t
@@ -233,7 +227,7 @@ class Context():
 
 # Context_Manager si occupa della gestione dei context-learner
 # feature_space = [("y", "f"), ("y", "u"),("a", "f"),("a", "u")]
-# TODO: si deve usare le week per decidere quando splittare
+
 class Context_Manager():
     def __init__(self, n_arms, feature_space, categories, candidates, week = -1, contexts_known = False):
         # feature space è lista di tuple di dimensione pari al numero di variabili
@@ -302,26 +296,13 @@ class Context_Manager():
 
 
                 #se lo split non restituisce una stringa vuota significa che bisogna effettuarlo
-                # cosa possiede split?
                 if split != []:
 
                     # trovo nuovo indice cel nuovo contesto
 
                     feature = split[0]
-                    # val_after_split = split[1]
-                    
-                    # LEARNER AGGIORNATI
                     learner_1 = split[2] # questo learner è associato al log SENZA la feature
                     learner_2 = split[3] # questo learner è associato al log CON la feature
-
-                    # LEARNER NUOVI
-                    #learner_1 = TS_Learner_candidate(context.learner.n_arms)
-                    #learner_2 = TS_Learner_candidate(context.learner.n_arms)
-
-                    # LEARNER COPIA DEL PADRE
-                    #learner_1 = TS_Learner_candidate(context.learner.n_arms)
-                    #learner_2 = TS_Learner_candidate(context.learner.n_arms)
-
                     #print("beta parameters learner 0")
                     #print(context.learner.beta_parameters)
                     #print("beta parameters learner 1")
@@ -337,18 +318,10 @@ class Context_Manager():
                     compl_feature_2 = [x for x in context.subspace if feature in x]
 
                     #print(feature, compl_feature_1, compl_feature_2)
-                    
-                    # nuovo sotto-contesto, nuovo numero, subspace SENZA feature, suo learner
-                    #contexts_set_copy[number] = Context(number, compl_feature_1, split[3])
-                    # aggiorno contesto padre con il numero del padre, subspace CON feature, suo learner
-                    #contexts_set_copy[index] = Context(index, compl_feature_2, split[2])
-###############################
 
-                    # TODO CAMBIA context.rewards_log con contesto 1 e contesto 2
-                    # NEW! i nuovi contesti ora hanno i learner associati correttamente con i contesti#
+
                     # nuovo sotto-contesto, nuovo numero, subspace SENZA feature, suo learner
                     log_1 = context.fetch_log(feature)
-                    #log_2 = context.fetch_log(complementary_feature(context.fetch_log(feature)))
                     log_2 = context.fetch_log(complementary_feature(feature))
                     #print(feature, complementary_feature(feature))
                     #print(len(log_1), "log 1")
@@ -358,7 +331,6 @@ class Context_Manager():
                     contexts_set_copy[number] = Context(number, compl_feature_1, learner_1, log_1) #context.rewards_log
                     # aggiorno contesto padre con il numero del padre, subspace CON feature, suo learner
                     contexts_set_copy[index] = Context(index, compl_feature_2, learner_2, log_2)
-###############################
             
             # aggiorno il context_set con quello nuovo dopo aver creato i nuovi contesti 
 
@@ -448,7 +420,7 @@ class General():
             # scelgo arm
             pulled_arm = self.context_manager.select_arm(features_person, t, candidates_values)
 
-            #NEW!: ritorna valore atteso di tale arm dal contesto assegnato
+            #ritorna valore atteso di tale arm dal contesto assegnato
             valore_atteso_arm = self.context_manager.val_att_arm(features_person, pulled_arm, candidates_values)
 
             # ottengo reward positiva o nulla
@@ -458,7 +430,6 @@ class General():
             self.context_manager.update_context(features_person, pulled_arm, reward_person)
 
             # aggiorno il log dell'experiment, con esso analizzo regret
-            #NEW! 
             self.rewards_log.append([category_person, pulled_arm, reward_person, valore_atteso_arm])
             #self.rewards_log.append([category_person, pulled_arm, reward_person])
         
