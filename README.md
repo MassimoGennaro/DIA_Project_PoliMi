@@ -6,6 +6,7 @@ You can look at the jupyter notebook [here](https://github.com/MassimoGennaro/DI
 
 ## Implementation
 In the experiments files wrapper classes are present that implement the various functionalities requested. _Pricing_ and _Advertsing_ directories contain all the python modules.
+
 ---
 ## Pricing & Advertising
 
