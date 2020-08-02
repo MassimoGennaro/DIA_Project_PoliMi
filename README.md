@@ -1,4 +1,4 @@
-# DIA_Project_PoliMi
+# DIA Project PoliMi
 This repository contains the implementation of the project of the [Data Intelligence Application](https://www4.ceda.polimi.it/manifesti/manifesti/controller/ManifestoPublic.do?EVN_DETTAGLIO_RIGA_MANIFESTO=evento&aa=2019&k_cf=225&k_corso_la=481&k_indir=T2A&codDescr=054444&lang=IT&semestre=2&idGruppo=3925&idRiga=239696) course at Politecnico di Milano, A.Y. 2019-2020
 
 ## How to use
